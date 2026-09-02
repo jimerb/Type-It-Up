@@ -72,7 +72,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 <div style="position:absolute;inset:0;background-image:url(data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%3E%3Cfilter%20id%3D%27n%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.9%27%20numOctaves%3D%274%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27100%25%27%20height%3D%27100%25%27%20filter%3D%27url%28%23n%29%27%2F%3E%3C%2Fsvg%3E);opacity:.1;mix-blend-mode:multiply"></div>
 <sc-for list="{{ t.bars }}" as="b" hint-placeholder-count="3"><div style="{{ b.style }}"></div></sc-for>
 <div style="{{ t.numStyle }}">{{ t.num }}</div>
-<div onClick="{{ t.trash }}" title="Throw this page away" style="{{ t.trashStyle }}">🗑</div>
+<div onClick="{{ t.duplicate }}" title="Duplicate this page" aria-label="Duplicate this page" style="{{ t.duplicateStyle }}">⧉</div>
+<div onClick="{{ t.trash }}" title="Throw this page away" aria-label="Throw this page away" style="{{ t.trashStyle }}">🗑</div>
 </div>
 </sc-for>
 <div onClick="{{ addPage }}" style="width:62px;height:34px;border:1px dashed rgba(231,224,210,.22);display:flex;align-items:center;justify-content:center;font:400 15px 'IBM Plex Mono';color:rgba(231,224,210,.35);cursor:pointer;flex:none" style-hover="border-color:#d9a15b;color:#d9a15b">+</div>
@@ -141,6 +142,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 
 <div style="{{ railScrollStyle }}">
 <sc-for list="{{ railItems }}" as="t" hint-placeholder-count="7">
+<sc-if value="{{ t.isSection }}" hint-placeholder-val="{{ false }}">
+<div style="{{ t.sectionStyle }}">{{ t.name }}</div>
+</sc-if>
+<sc-if value="{{ t.isControl }}" hint-placeholder-val="{{ true }}">
 <div style="display:flex;flex-direction:column;flex:none">
 <div onClick="{{ t.act }}" title="{{ t.name }}" style="{{ t.style }}">
 <span style="{{ t.iconStyle }}">{{ t.icon }}</span>
@@ -201,20 +206,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 </div>
 </sc-if>
 
-<sc-if value="{{ t.openPage }}" hint-placeholder-val="{{ false }}">
-<div style="{{ panelStyle }}">
-<div onClick="{{ addPage }}" style="{{ actionStyle }}">+ Add page</div>
-<div onClick="{{ duplicatePage }}" style="{{ actionStyle }}">Duplicate page</div>
-<div onClick="{{ ejectPage }}" style="{{ dangerStyle }}">Throw this page away</div>
-<span style="{{ noteStyle }}">{{ pageCountLabel }} · undoable</span>
-</div>
-</sc-if>
-
 <sc-if value="{{ t.openSettings }}" hint-placeholder-val="{{ false }}">
 <div style="{{ panelStyle }}">
 <div onClick="{{ prefRulers }}" style="{{ rowStyle }}"><span>Show rulers</span><div style="{{ pTrack1 }}"><div style="{{ pKnob1 }}"></div></div></div>
 <div onClick="{{ prefRail }}" style="{{ rowStyle }}"><span>Show page rail</span><div style="{{ pTrack2 }}"><div style="{{ pKnob2 }}"></div></div></div>
 <div onClick="{{ prefDrawer }}" style="{{ rowStyle }}"><span>Open tools on launch</span><div style="{{ pTrack3 }}"><div style="{{ pKnob3 }}"></div></div></div>
+<div onClick="{{ toggleSound }}" style="{{ rowStyle }}"><span>Typewriter sounds</span><div style="display:flex;align-items:center;gap:7px"><span style="{{ valStyle }}">{{ soundLabel }}</span><div style="{{ pTrack4 }}"><div style="{{ pKnob4 }}"></div></div></div></div>
 <span style="{{ subheadStyle }}">DEFAULT PAPER SIZE</span>
 <div style="display:flex;gap:6px">
 <sc-for list="{{ prefSizeChips }}" as="z" hint-placeholder-count="3"><div onClick="{{ z.pick }}" style="{{ z.style }}">{{ z.name }}</div></sc-for>
@@ -225,6 +222,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 </sc-if>
 
 </div>
+</sc-if>
 </sc-for>
 </div>
 
@@ -911,7 +909,15 @@ class Component extends DCLogic {
     d.pages.push(newPage());
     return { pi: d.pages.length - 1, r: 6, c: this.metrics(d).leftCol, hover: null };
   });
-  duplicatePage = () => this.mut((p, d, s) => { d.pages.splice(s.pi + 1, 0, JSON.parse(JSON.stringify(p))); return { pi: s.pi + 1, hover: null }; });
+  duplicatePageAt = i => {
+    this.mut((p, d) => {
+      const source = d.pages[i];
+      if (!source) return {};
+      d.pages.splice(i + 1, 0, JSON.parse(JSON.stringify(source)));
+      return { pi: i + 1, r: 6, c: this.metrics(d).leftCol, hover: null };
+    });
+  };
+  duplicatePage = () => this.duplicatePageAt(this.state.pi);
   ejectPage = () => {
     if (this.d.pages.length < 2) return;
     this.mut((p, d, s) => {
@@ -929,6 +935,7 @@ class Component extends DCLogic {
       return { pi, hover: null };
     });
   };
+  duplicateThumb = i => e => { e.stopPropagation(); this.duplicatePageAt(i); };
   draft = patch => () => this.setState(s => ({ draft: { ...s.draft, ...patch } }));
   startDoc = () => {
     const dr = this.state.draft, size = SIZES[dr.size] ? dr.size : this.state.prefs.size;
@@ -1085,7 +1092,8 @@ class Component extends DCLogic {
         style: `position:absolute;left:${(6 + (this.leftCol * cw / this.pw) * 50).toFixed(1)}px;top:${(8 + (Number(r) * lh / this.ph) * 108).toFixed(1)}px;height:2px;width:${Math.max(3, ((rows[r] - this.leftCol) * cw / this.pw) * 84).toFixed(1)}px;background:rgba(${IC[0]},${IC[1]},${IC[2]},.45)`,
       }));
       return {
-        key: "p" + i, num: i + 1, bars, select: this.selectPage(i), hover: this.setHover(i), trash: this.trashPage(i),
+        key: "p" + i, num: i + 1, bars, select: this.selectPage(i), hover: this.setHover(i), duplicate: this.duplicateThumb(i), trash: this.trashPage(i),
+        duplicateStyle: "position:absolute;top:3px;right:24px;width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;background:rgba(20,18,12,.85);color:rgba(231,224,210,.72);cursor:pointer",
         trashStyle: `position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:4px;display:${d.pages.length > 1 ? "flex" : "none"};align-items:center;justify-content:center;font-size:9.5px;line-height:1;background:rgba(20,18,12,.85);color:rgba(231,224,210,.72);cursor:pointer`,
         style: `position:relative;width:74px;height:124px;flex:none;cursor:pointer;background:rgb(${248 - age * 22},${240 - age * 28},${226 - age * 44});box-shadow:${i === s.pi ? "0 0 0 2px #d9a15b,0 6px 14px rgba(0,0,0,.5)" : "0 4px 12px rgba(0,0,0,.4)"};opacity:${i === s.pi ? 1 : 0.72}`,
         numStyle: `position:absolute;right:-1px;bottom:-1px;font:600 8px 'IBM Plex Mono';color:${i === s.pi ? "#d9a15b" : "rgba(231,224,210,.4)"};background:#121009;padding:1px 3px`,
@@ -1126,23 +1134,29 @@ class Component extends DCLogic {
     });
 
     const open = s.railOpen ? s.expanded : null;
+    let sectionIndex = 0;
     const railItems = [
-      { key: "type", icon: "A", name: "Type", tint: "#d9a15b", on: s.tool === "type", panel: true, act: this.openSection("type", "type") },
-      { key: "select", icon: "⬚", name: "Select", tint: "#7fb0e6", on: s.tool === "select", act: this.setTool("select") },
-      { key: "draw", icon: "✎", name: "Draw", tint: "#e8cf62", on: s.tool === "draw", panel: true, act: this.openSection("draw", "draw") },
-      { key: "whiteout", icon: "🧴", name: "Whiteout", tint: "#e2b06c", on: open === "whiteout", panel: true, act: this.openSection("whiteout") },
-      { key: "paper", icon: "◐", name: "Paper and ribbon", tint: "#d9a15b", on: open === "paper", panel: true, act: this.openSection("paper") },
-      { key: "page", icon: "▤", name: "Pages", tint: "#d9a15b", on: open === "page", panel: true, act: this.openSection("page") },
-       { key: "sound", icon: "♪", name: s.prefs.sound ? "Sound on" : "Sound off", tint: "#d9a15b", on: s.prefs.sound, act: this.toggleSound },
-      { key: "settings", icon: "⚙", name: "Settings", tint: "#d9a15b", on: open === "settings", panel: true, act: this.openSection("settings") },
+      { key: "modes", name: "Modes", isSection: true },
+      { key: "type", icon: "A", name: "Type", tint: "#d9a15b", on: s.tool === "type", panel: true, isControl: true, act: this.openSection("type", "type") },
+      { key: "select", icon: "⬚", name: "Select", tint: "#d9a15b", on: s.tool === "select", isControl: true, act: this.setTool("select") },
+      { key: "draw", icon: "✎", name: "Draw", tint: "#d9a15b", on: s.tool === "draw", panel: true, isControl: true, act: this.openSection("draw", "draw") },
+      { key: "correction", name: "Correction", isSection: true },
+      { key: "whiteout", icon: "🧴", name: "Whiteout", tint: "#d9a15b", on: open === "whiteout", panel: true, isControl: true, act: this.openSection("whiteout") },
+      { key: "document", name: "Document", isSection: true },
+      { key: "paper", icon: "◐", name: "Paper and ribbon", tint: "#d9a15b", on: open === "paper", panel: true, isControl: true, act: this.openSection("paper") },
+      { key: "preferences", name: "Preferences", isSection: true },
+      { key: "settings", icon: "⚙", name: "Settings", tint: "#d9a15b", on: open === "settings", panel: true, isControl: true, act: this.openSection("settings") },
     ].map(it => {
+      if (it.isSection) {
+        const first = sectionIndex++ === 0;
+        return { ...it, sectionStyle: `flex:none;margin:0 8px;padding:${first ? "5px" : "14px"} 10px 5px;border-top:${first ? "0" : "1px solid rgba(255,255,255,.07)"};font:600 8.5px 'IBM Plex Mono';letter-spacing:.16em;text-transform:uppercase;color:rgba(231,224,210,.34)` };
+      }
       const c = it.tint, isOpen = open === it.key;
       return { ...it,
         openDraw: isOpen && it.key === "draw",
         openType: isOpen && it.key === "type",
         openWhite: isOpen && it.key === "whiteout",
         openPaper: isOpen && it.key === "paper",
-        openPage: isOpen && it.key === "page",
         openSettings: isOpen && it.key === "settings",
         caret: it.panel ? (isOpen ? "▾" : "▸") : "",
         caretStyle: it.panel && s.railOpen ? `margin-left:auto;font:600 9px 'IBM Plex Mono';color:${isOpen ? c : "rgba(231,224,210,.35)"}` : "display:none",
@@ -1156,7 +1170,7 @@ class Component extends DCLogic {
     const nibs = Object.keys(NIBS).map(k => ({ key: k, name: NIBS[k].name, pick: this.setNib(k),
       style: `flex:1;text-align:center;font:500 10.5px 'IBM Plex Sans';border-radius:5px;padding:5px 0;cursor:pointer;white-space:nowrap;${curNib === k ? "background:#d9a15b;color:#1a1712" : "color:rgba(231,224,210,.6);border:1px solid rgba(255,255,255,.1)"}`}));
 
-    const pA = this.sw(s.prefs.rulers), pB = this.sw(s.prefs.rail), pC = this.sw(s.prefs.drawer);
+    const pA = this.sw(s.prefs.rulers), pB = this.sw(s.prefs.rail), pC = this.sw(s.prefs.drawer), pD = this.sw(s.prefs.sound);
     const K = 0.34, hv = s.hover;
     const hp = hv ? d.pages[hv.i] : null;
     const top = hv ? Math.max(64, Math.min(hv.y - (this.ph * K) / 2, window.innerHeight - this.ph * K - 60)) : 0;
@@ -1218,7 +1232,8 @@ class Component extends DCLogic {
       age: d.age, wear: d.wear, ink: d.ink, mwear: d.mwear, inkLabel, seedLabel: `${page.seed} · locked to page`,
       onAge: this.onNum("age"), onWear: this.onNum("wear"), onInk: this.onNum("ink"), onMwear: this.onNum("mwear"),
       swTrack2: swB.track, swKnob2: swB.knob, swTrack3: swC.track, swKnob3: swC.knob,
-      pTrack1: pA.track, pKnob1: pA.knob, pTrack2: pB.track, pKnob2: pB.knob, pTrack3: pC.track, pKnob3: pC.knob,
+      pTrack1: pA.track, pKnob1: pA.knob, pTrack2: pB.track, pKnob2: pB.knob, pTrack3: pC.track, pKnob3: pC.knob, pTrack4: pD.track, pKnob4: pD.knob,
+      soundLabel: s.prefs.sound ? "On" : "Off",
       prefRulers: () => this.savePrefs({ rulers: !s.prefs.rulers }),
       prefRail: () => this.savePrefs({ rail: !s.prefs.rail }),
       prefDrawer: () => this.savePrefs({ drawer: !s.prefs.drawer }),

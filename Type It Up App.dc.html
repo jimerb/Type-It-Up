@@ -36,23 +36,22 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 <div id="tiu-app" tabindex="0" onKeyDown="{{ onKey }}" onFocus="{{ onFocus }}" onBlur="{{ onBlur }}" onClick="{{ onAppClick }}" style="height:100vh;display:flex;flex-direction:column;background:radial-gradient(110% 80% at 50% 100%,#1f1c16 0%,#121009 75%);outline:none;color:#e7e0d2">
 
 <sc-if value="{{ chromeVisible }}" hint-placeholder-val="{{ true }}">
-<div style="display:flex;align-items:center;gap:14px;height:52px;padding:0 18px;background:linear-gradient(#26221b,#1c1913);border-bottom:1px solid rgba(0,0,0,.5);flex:none;overflow:hidden;min-width:0">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;height:52px;padding:0 18px;background:linear-gradient(#26221b,#1c1913);border-bottom:1px solid rgba(0,0,0,.5);flex:none;overflow:hidden;min-width:0;box-sizing:border-box">
+<div style="display:flex;align-items:center;gap:14px;min-width:0;overflow:hidden">
 <img src="./type-it-up-header-transparent-cropped.png" alt="Type It Up" style="width:184px;height:40px;object-fit:contain;object-position:left center;flex:none;display:block;filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))">
-<span style="font:400 10.5px 'IBM Plex Mono';color:rgba(231,224,210,.32);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto">{{ savedLabel }}</span>
-<div style="width:1px;height:20px;background:rgba(255,255,255,.09);flex:none"></div>
-<div style="display:flex;gap:6px;flex:none">
-<div onClick="{{ toggleBold }}" style="font:600 10.5px 'IBM Plex Mono';border-radius:4px;padding:5px 10px;cursor:pointer;border:1px solid transparent" style-hover="border-color:rgba(255,255,255,.18)" data-on="{{ boldOn }}"><span style="{{ boldStyle }}">B</span></div>
-<div onClick="{{ toggleUnder }}" style="font:600 10.5px 'IBM Plex Mono';border-radius:4px;padding:5px 10px;cursor:pointer;border:1px solid transparent" style-hover="border-color:rgba(255,255,255,.18)"><span style="{{ underStyle }}">U</span></div>
-<div onClick="{{ undo }}" style="font:600 12px 'IBM Plex Mono';color:rgba(231,224,210,.6);border-radius:4px;padding:4px 10px;cursor:pointer" style-hover="color:#e7e0d2">↺</div>
-<div onClick="{{ redo }}" style="font:600 12px 'IBM Plex Mono';color:rgba(231,224,210,.6);border-radius:4px;padding:4px 10px;cursor:pointer" style-hover="color:#e7e0d2">↻</div>
+<span title="{{ savedTitle }}" style="font:400 10.5px 'IBM Plex Mono';color:rgba(231,224,210,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">{{ savedLabel }}</span>
 </div>
-<div style="width:1px;height:20px;background:rgba(255,255,255,.09);flex:none"></div>
-<span style="font:500 11px 'IBM Plex Sans';color:rgba(231,224,210,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto">{{ machineLine }}</span>
-  <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex:none">
-<span style="{{ focusBadgeStyle }}">{{ focusBadge }}</span>
-   <div onClick="{{ openNew }}" style="font:500 11px 'IBM Plex Sans';color:rgba(231,224,210,.6);cursor:pointer;white-space:nowrap;flex:none" style-hover="color:#e7e0d2">New document</div>
-   <div onClick="{{ openProject }}" style="font:500 11px 'IBM Plex Sans';color:rgba(231,224,210,.6);cursor:pointer;white-space:nowrap;flex:none" style-hover="color:#e7e0d2">Open</div>
-   <div onClick="{{ saveProject }}" style="font:500 11px 'IBM Plex Sans';color:#1a1712;background:#d9a15b;border-radius:5px;padding:6px 10px;cursor:pointer;flex:none;white-space:nowrap">Save project</div>
+<div style="display:flex;align-items:center;gap:5px;justify-content:center;padding:0 12px">
+<div onClick="{{ toggleBold }}" title="Bold" aria-label="Toggle bold" style="font:600 10.5px 'IBM Plex Mono';border-radius:4px;padding:5px 10px;cursor:pointer;border:1px solid transparent" style-hover="border-color:rgba(255,255,255,.18)" data-on="{{ boldOn }}"><span style="{{ boldStyle }}">B</span></div>
+<div onClick="{{ toggleUnder }}" title="Underline" aria-label="Toggle underline" style="font:600 10.5px 'IBM Plex Mono';border-radius:4px;padding:5px 10px;cursor:pointer;border:1px solid transparent" style-hover="border-color:rgba(255,255,255,.18)"><span style="{{ underStyle }}">U</span></div>
+<div onClick="{{ undo }}" title="Undo" aria-label="Undo" style="font:600 12px 'IBM Plex Mono';color:rgba(231,224,210,.6);border-radius:4px;padding:4px 10px;cursor:pointer" style-hover="color:#e7e0d2">↺</div>
+<div onClick="{{ redo }}" title="Redo" aria-label="Redo" style="font:600 12px 'IBM Plex Mono';color:rgba(231,224,210,.6);border-radius:4px;padding:4px 10px;cursor:pointer" style-hover="color:#e7e0d2">↻</div>
+</div>
+<div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0;overflow:hidden">
+<span title="{{ focusHelp }}" style="{{ focusBadgeStyle }}">{{ focusBadge }}</span>
+<div onClick="{{ openNew }}" title="New document" aria-label="New document" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:rgba(231,224,210,.68);background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.11);border-radius:5px;cursor:pointer;flex:none;box-sizing:border-box" style-hover="color:#e7e0d2;border-color:rgba(217,161,91,.58);background:rgba(217,161,91,.1)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 1.8h5l3 3v9.4H4z"></path><path d="M9 1.8v3h3M8 8v4M6 10h4"></path></svg></div>
+<div onClick="{{ openProject }}" title="Open project" aria-label="Open project" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:rgba(231,224,210,.68);background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.11);border-radius:5px;cursor:pointer;flex:none;box-sizing:border-box" style-hover="color:#e7e0d2;border-color:rgba(217,161,91,.58);background:rgba(217,161,91,.1)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6h6l2 2h10v2"></path><path d="M3 19l3-7h16l-3 7z"></path></svg></div>
+<div onClick="{{ saveProject }}" title="Save project" aria-label="Save project" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:#1a1712;background:#d9a15b;border:1px solid #d9a15b;border-radius:5px;cursor:pointer;flex:none;box-sizing:border-box" style-hover="background:#eab876;border-color:#eab876"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 1.8h9l2 2v10.4H2.5z"></path><path d="M5 1.8v4h5v-4M5 13h6V9H5z"></path></svg></div>
    <div onClick="{{ toggleFullscreen }}" style="{{ fsBtnStyle }}" style-hover="color:#e7e0d2;border-color:rgba(255,255,255,.22)">{{ fsLabel }}</div>
 <div onClick="{{ doPrint }}" style="font:600 11px 'IBM Plex Sans';color:#1a1712;background:#e7e0d2;border-radius:5px;padding:6px 12px;cursor:pointer;flex:none;white-space:nowrap">Export</div>
 </div>
@@ -73,7 +72,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 <div style="position:absolute;inset:0;background-image:url(data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%3E%3Cfilter%20id%3D%27n%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.9%27%20numOctaves%3D%274%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27100%25%27%20height%3D%27100%25%27%20filter%3D%27url%28%23n%29%27%2F%3E%3C%2Fsvg%3E);opacity:.1;mix-blend-mode:multiply"></div>
 <sc-for list="{{ t.bars }}" as="b" hint-placeholder-count="3"><div style="{{ b.style }}"></div></sc-for>
 <div style="{{ t.numStyle }}">{{ t.num }}</div>
-<div onClick="{{ t.trash }}" title="Throw this page away" style="{{ t.trashStyle }}">🗑</div>
+<div onClick="{{ t.duplicate }}" title="Duplicate this page" aria-label="Duplicate this page" style="{{ t.duplicateStyle }}">⧉</div>
+<div onClick="{{ t.trash }}" title="Throw this page away" aria-label="Throw this page away" style="{{ t.trashStyle }}">🗑</div>
 </div>
 </sc-for>
 <div onClick="{{ addPage }}" style="width:62px;height:34px;border:1px dashed rgba(231,224,210,.22);display:flex;align-items:center;justify-content:center;font:400 15px 'IBM Plex Mono';color:rgba(231,224,210,.35);cursor:pointer;flex:none" style-hover="border-color:#d9a15b;color:#d9a15b">+</div>
@@ -142,6 +142,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 
 <div style="{{ railScrollStyle }}">
 <sc-for list="{{ railItems }}" as="t" hint-placeholder-count="7">
+<sc-if value="{{ t.isSection }}" hint-placeholder-val="{{ false }}">
+<div style="{{ t.sectionStyle }}">{{ t.name }}</div>
+</sc-if>
+<sc-if value="{{ t.isControl }}" hint-placeholder-val="{{ true }}">
 <div style="display:flex;flex-direction:column;flex:none">
 <div onClick="{{ t.act }}" title="{{ t.name }}" style="{{ t.style }}">
 <span style="{{ t.iconStyle }}">{{ t.icon }}</span>
@@ -202,20 +206,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 </div>
 </sc-if>
 
-<sc-if value="{{ t.openPage }}" hint-placeholder-val="{{ false }}">
-<div style="{{ panelStyle }}">
-<div onClick="{{ addPage }}" style="{{ actionStyle }}">+ Add page</div>
-<div onClick="{{ duplicatePage }}" style="{{ actionStyle }}">Duplicate page</div>
-<div onClick="{{ ejectPage }}" style="{{ dangerStyle }}">Throw this page away</div>
-<span style="{{ noteStyle }}">{{ pageCountLabel }} · undoable</span>
-</div>
-</sc-if>
-
 <sc-if value="{{ t.openSettings }}" hint-placeholder-val="{{ false }}">
 <div style="{{ panelStyle }}">
 <div onClick="{{ prefRulers }}" style="{{ rowStyle }}"><span>Show rulers</span><div style="{{ pTrack1 }}"><div style="{{ pKnob1 }}"></div></div></div>
 <div onClick="{{ prefRail }}" style="{{ rowStyle }}"><span>Show page rail</span><div style="{{ pTrack2 }}"><div style="{{ pKnob2 }}"></div></div></div>
 <div onClick="{{ prefDrawer }}" style="{{ rowStyle }}"><span>Open tools on launch</span><div style="{{ pTrack3 }}"><div style="{{ pKnob3 }}"></div></div></div>
+<div onClick="{{ toggleSound }}" style="{{ rowStyle }}"><span>Typewriter sounds</span><div style="display:flex;align-items:center;gap:7px"><span style="{{ valStyle }}">{{ soundLabel }}</span><div style="{{ pTrack4 }}"><div style="{{ pKnob4 }}"></div></div></div></div>
 <span style="{{ subheadStyle }}">DEFAULT PAPER SIZE</span>
 <div style="display:flex;gap:6px">
 <sc-for list="{{ prefSizeChips }}" as="z" hint-placeholder-count="3"><div onClick="{{ z.pick }}" style="{{ z.style }}">{{ z.name }}</div></sc-for>
@@ -226,6 +222,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 </sc-if>
 
 </div>
+</sc-if>
 </sc-for>
 </div>
 
@@ -405,6 +402,9 @@ const seedStr = () => Math.random().toString(16).slice(2, 10);
 const newPage = () => ({ strikes: [], whiteouts: [], highlights: [], strokes: [], seed: seedStr() });
 
 class Component extends DCLogic {
+  // Async recovery, autosave, and export work must belong to the document that started them.
+  _documentGeneration = 0;
+  _saveSequence = 0;
   state = {
     doc: null, pi: 0, r: 6, c: 10, order: 1,
     tool: "type", bold: false, under: false, focused: false,
@@ -412,7 +412,7 @@ class Component extends DCLogic {
     helpOpen: false, newOpen: false, fs: false, immersive: false, vw: 0,
     railOpen: false, expanded: null, live: null,
     hover: null,
-    sel: null, selAnchor: null, selFocus: null, drag: null, clip: null, saved: "",
+    sel: null, selAnchor: null, selFocus: null, drag: null, clip: null, saved: "", savedAt: null, savedKind: null,
     draft: { machine: "office", size: "letter", condition: "fresh" },
     undoStack: [], redoStack: [],
   };
@@ -438,19 +438,23 @@ class Component extends DCLogic {
     const initialMetrics = this.metrics(initial);
     this.setState({ doc: initial, prefs, railOpen: prefs.drawer, pi: 0, r: 6, c: initialMetrics.leftCol,
       order: TypeItUpProject.maxSequence(initial), newOpen: !legacy, draft: { machine: initial.machine, size: initial.size, condition: "fresh" },
-      saved: "checking autosave…" });
+      saved: "checking saved work…" });
+    const loadGeneration = this._documentGeneration;
     (async () => {
       let recovered = null;
       try { recovered = await TypeItUpProject.loadAutosave(this.projectEnv()); } catch (e) {}
+      if (loadGeneration !== this._documentGeneration) return;
       if (!recovered) {
-        if (legacy && legacy.pages && legacy.pages.length) { try { localStorage.setItem(PKEY, JSON.stringify(prefs)); } catch (e) {} this.setState({ saved: "recovered legacy autosave" }, this.save); }
+        if (legacy && legacy.pages && legacy.pages.length) { try { localStorage.setItem(PKEY, JSON.stringify(prefs)); } catch (e) {} this.setState({ saved: "restoring saved work", savedKind: "autosave" }, () => this.save()); }
         else this.setState({ saved: "new document" });
         return;
       }
       const normalized = this.normalize(recovered.runtimeDoc), m = this.metrics(normalized);
       this.setState({ doc: normalized, prefs, railOpen: prefs.drawer, pi: Math.max(0, Math.min(recovered.resume.pageIndex, normalized.pages.length - 1)),
         r: Math.max(0, Math.min(m.lastRow, recovered.resume.row)), c: Math.max(m.leftCol, Math.min(m.rightCol, recovered.resume.column)),
-        order: TypeItUpProject.maxSequence(normalized), newOpen: false, saved: "recovered from autosave" });
+        order: TypeItUpProject.maxSequence(normalized), newOpen: false,
+        saved: recovered.portable && recovered.portable.modifiedAt ? "recovered autosave" : "recovered saved work",
+        savedAt: recovered.portable && recovered.portable.modifiedAt || null, savedKind: "recovered" });
     })();
   }
   componentWillUnmount() {
@@ -458,6 +462,9 @@ class Component extends DCLogic {
     window.removeEventListener("resize", this.measure);
     window.removeEventListener("blur", this.onWindowBlur);
     if (this._ro) this._ro.disconnect();
+    clearTimeout(this._t);
+    this._documentGeneration += 1;
+    this._saveSequence += 1;
   }
   componentDidUpdate() {
     const el = this.wrapEl();
@@ -525,13 +532,17 @@ class Component extends DCLogic {
   projectResume = () => ({ activePageId: this.page && this.page.id, row: this.state.r, column: this.state.c });
   saveProject = async () => {
     if (!this.d) return;
-    this.setState({ saved: "building project file…" });
+    TypeItUpProject.ensureRuntimeIds(this.d);
+    const generation = this._documentGeneration, projectId = this.d._tiu.projectId;
+    this.setState({ saved: "exporting project…", savedKind: "project" });
     try {
-      await TypeItUpProject.download(this.d, this.projectResume(), this.projectEnv());
-      this.setState({ saved: "project saved" });
+      const project = await TypeItUpProject.download(this.d, this.projectResume(), this.projectEnv());
+      if (generation !== this._documentGeneration || !this.d || this.d._tiu.projectId !== projectId) return;
+      this.setState({ saved: "project saved", savedAt: project.portable.modifiedAt, savedKind: "project" });
     } catch (e) {
+      if (generation !== this._documentGeneration || !this.d || this.d._tiu.projectId !== projectId) return;
       console.error("Type It Up project save failed", e);
-      this.setState({ saved: `project save failed: ${e && e.message ? e.message : "unknown error"}` });
+      this.setState({ saved: `project save failed: ${e && e.message ? e.message : "unknown error"}`, savedAt: null, savedKind: null });
     }
   };
   openProject = () => {
@@ -542,31 +553,45 @@ class Component extends DCLogic {
   };
   readProject = async file => {
     if (!file || !this.d) return;
-    this.setState({ saved: "opening project…" });
+    const previousSaved = { saved: this.state.saved, savedAt: this.state.savedAt, savedKind: this.state.savedKind };
+    const generation = ++this._documentGeneration;
+    this._saveSequence += 1;
+    clearTimeout(this._t);
+    this.setState({ saved: "opening project…", savedAt: null, savedKind: "project" });
     try {
       const imported = await TypeItUpProject.importPackage(file, this.projectEnv());
+      if (generation !== this._documentGeneration) return;
       const doc = this.normalize(imported.runtimeDoc), m = this.metrics(doc);
       const pi = Math.max(0, Math.min(imported.resume.pageIndex, doc.pages.length - 1));
       const r = Math.max(0, Math.min(m.lastRow, imported.resume.row));
       const c = Math.max(m.leftCol, Math.min(m.rightCol, imported.resume.column));
       this.setState({ doc, pi, r, c, order: TypeItUpProject.maxSequence(doc), focused: false, tool: "type",
         sel: null, selAnchor: null, selFocus: null, drag: null, live: null, clip: null, undoStack: [], redoStack: [], hover: null,
-        saved: "project opened" }, () => { this.remeasure(); this.save(); });
+        saved: "project opened", savedAt: imported.portable && imported.portable.modifiedAt || null, savedKind: "imported" }, () => { this.remeasure(); this.save(); });
     } catch (e) {
-      this.setState({ saved: `project not opened: ${e && e.message ? e.message : "invalid file"}` });
+      if (generation !== this._documentGeneration) return;
+      const retrySave = previousSaved.saved === "autosaving…" || previousSaved.saved === "restoring saved work";
+      this.setState({ saved: `project not opened: ${e && e.message ? e.message : "invalid file"}`, savedAt: previousSaved.savedAt, savedKind: previousSaved.savedKind }, retrySave ? () => this.save() : undefined);
     }
   };
 
   save() {
     clearTimeout(this._t);
+    const generation = this._documentGeneration, sequence = ++this._saveSequence;
+    this.setState({ saved: "autosaving…", savedKind: "autosave" });
     this._t = setTimeout(() => {
       const snapshot = this.d;
       try { TypeItUpProject.ensureRuntimeIds(snapshot); } catch (e) {}
+      const projectId = snapshot && snapshot._tiu && snapshot._tiu.projectId;
       TypeItUpProject.autosave(snapshot, this.projectResume(), this.projectEnv())
-        .then(() => this.setState({ saved: "autosaved just now" }))
+        .then(portable => {
+          if (generation !== this._documentGeneration || sequence !== this._saveSequence || !this.d || this.d._tiu.projectId !== projectId) return;
+          this.setState({ saved: "autosaved", savedAt: portable.modifiedAt, savedKind: "autosave" });
+        })
         .catch(() => {
-          try { localStorage.setItem(KEY, JSON.stringify(snapshot)); this.setState({ saved: "autosaved locally" }); }
-          catch (e) { this.setState({ saved: "autosave unavailable" }); }
+          if (generation !== this._documentGeneration || sequence !== this._saveSequence || !this.d || this.d._tiu.projectId !== projectId) return;
+          try { localStorage.setItem(KEY, JSON.stringify(snapshot)); this.setState({ saved: "autosaved locally", savedAt: new Date().toISOString(), savedKind: "autosave-local" }); }
+          catch (e) { this.setState({ saved: "autosave unavailable", savedAt: null, savedKind: null }); }
         });
     }, 400);
   }
@@ -884,7 +909,15 @@ class Component extends DCLogic {
     d.pages.push(newPage());
     return { pi: d.pages.length - 1, r: 6, c: this.metrics(d).leftCol, hover: null };
   });
-  duplicatePage = () => this.mut((p, d, s) => { d.pages.splice(s.pi + 1, 0, JSON.parse(JSON.stringify(p))); return { pi: s.pi + 1, hover: null }; });
+  duplicatePageAt = i => {
+    this.mut((p, d) => {
+      const source = d.pages[i];
+      if (!source) return {};
+      d.pages.splice(i + 1, 0, JSON.parse(JSON.stringify(source)));
+      return { pi: i + 1, r: 6, c: this.metrics(d).leftCol, hover: null };
+    });
+  };
+  duplicatePage = () => this.duplicatePageAt(this.state.pi);
   ejectPage = () => {
     if (this.d.pages.length < 2) return;
     this.mut((p, d, s) => {
@@ -902,11 +935,16 @@ class Component extends DCLogic {
       return { pi, hover: null };
     });
   };
+  duplicateThumb = i => e => { e.stopPropagation(); this.duplicatePageAt(i); };
   draft = patch => () => this.setState(s => ({ draft: { ...s.draft, ...patch } }));
   startDoc = () => {
     const dr = this.state.draft, size = SIZES[dr.size] ? dr.size : this.state.prefs.size;
-    this.setState({ doc: this.blankDoc(dr.machine, size, dr.condition), pi: 0, r: 6,
-      c: MACHINES[dr.machine].cpi, newOpen: false, sel: null, selAnchor: null, selFocus: null, focused: false, hover: null, undoStack: [], redoStack: [] }, () => this.save());
+    const doc = this.blankDoc(dr.machine, size, dr.condition);
+    this._documentGeneration += 1;
+    this._saveSequence += 1;
+    clearTimeout(this._t);
+    this.setState({ doc, pi: 0, r: 6, c: MACHINES[dr.machine].cpi, newOpen: false,
+      sel: null, selAnchor: null, selFocus: null, focused: false, hover: null, undoStack: [], redoStack: [], saved: "new document", savedAt: null, savedKind: null });
   };
   syncPageRule = () => {
     if (!this.d) return;
@@ -939,6 +977,27 @@ class Component extends DCLogic {
   renderVals() {
     if (!this.d) return { chromeVisible: true, immersive: false, strikes: [], buried: [], whiteouts: [], highlights: [], thumbs: [], specks: [], previewStrikes: [], previewWhiteouts: [], previewHighlights: [], previewStrokes: [], inkStrokes: [], printPages: [], railItems: [], nibs: [], nibSwatches: [], previewStyle: "display:none", paperStyle: "position:absolute;left:50%;width:1px;height:1px" };
     const s = this.state, d = this.d, M = this.M, cw = this.cellW, lh = this.lineH;
+    const savedDate = s.savedAt ? new Date(s.savedAt) : null;
+    const hasSavedTime = savedDate && !Number.isNaN(savedDate.getTime());
+    const savedTime = hasSavedTime ? savedDate.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "";
+    const saveProblem = /failed|unavailable|not opened/.test(s.saved || "");
+    const savedLabel = saveProblem ? s.saved : s.saved === "autosaving…" || s.saved === "exporting project…" || s.saved === "opening project…" || s.saved === "checking saved work…" || s.saved === "restoring saved work"
+      ? s.saved : hasSavedTime
+        ? s.savedKind === "project" ? `Saved ${savedTime}`
+          : s.savedKind === "recovered" ? `Recovered autosave ${savedTime}`
+            : s.savedKind === "imported" ? `Opened · file date ${savedTime}`
+              : s.savedKind === "autosave-local" ? `Autosaved locally ${savedTime}`
+                : `Autosaved ${savedTime}`
+        : s.saved === "new document" ? "Not saved yet" : s.saved || "Not saved yet";
+    const savedTitle = saveProblem
+      ? `${s.saved}${hasSavedTime ? ` Previous status: ${s.savedKind === "project" ? "project save" : "autosave"} at ${savedDate.toLocaleString()}.` : ""}`
+      : hasSavedTime
+        ? s.savedKind === "project" ? `Project file saved at ${savedDate.toLocaleString()}.`
+          : s.savedKind === "recovered" ? `Recovered an autosave from cache at ${savedDate.toLocaleString()}.`
+            : s.savedKind === "imported" ? `Opened a project. Its source file is dated ${savedDate.toLocaleString()}.`
+              : s.savedKind === "autosave-local" ? `Autosaved in cache at ${savedDate.toLocaleString()}. This does not overwrite a project file.`
+                : `Autosaved in cache at ${savedDate.toLocaleString()}. This does not overwrite a project file.`
+        : "This document has not been saved. Changes will be autosaved after you type.";
     const machineWear = Math.max(0, Math.min(100, Number(d.mwear) || 0)) / 100;
     const fs = cw / 0.6, jit = M.jit * (0.3 + machineWear * 4), inkBase = 0.72 + 0.28 * M.ink;
     const page = this.page, sel = s.sel;
@@ -1033,7 +1092,8 @@ class Component extends DCLogic {
         style: `position:absolute;left:${(6 + (this.leftCol * cw / this.pw) * 50).toFixed(1)}px;top:${(8 + (Number(r) * lh / this.ph) * 108).toFixed(1)}px;height:2px;width:${Math.max(3, ((rows[r] - this.leftCol) * cw / this.pw) * 84).toFixed(1)}px;background:rgba(${IC[0]},${IC[1]},${IC[2]},.45)`,
       }));
       return {
-        key: "p" + i, num: i + 1, bars, select: this.selectPage(i), hover: this.setHover(i), trash: this.trashPage(i),
+        key: "p" + i, num: i + 1, bars, select: this.selectPage(i), hover: this.setHover(i), duplicate: this.duplicateThumb(i), trash: this.trashPage(i),
+        duplicateStyle: "position:absolute;top:3px;right:24px;width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1;background:rgba(20,18,12,.85);color:rgba(231,224,210,.72);cursor:pointer",
         trashStyle: `position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:4px;display:${d.pages.length > 1 ? "flex" : "none"};align-items:center;justify-content:center;font-size:9.5px;line-height:1;background:rgba(20,18,12,.85);color:rgba(231,224,210,.72);cursor:pointer`,
         style: `position:relative;width:74px;height:124px;flex:none;cursor:pointer;background:rgb(${248 - age * 22},${240 - age * 28},${226 - age * 44});box-shadow:${i === s.pi ? "0 0 0 2px #d9a15b,0 6px 14px rgba(0,0,0,.5)" : "0 4px 12px rgba(0,0,0,.4)"};opacity:${i === s.pi ? 1 : 0.72}`,
         numStyle: `position:absolute;right:-1px;bottom:-1px;font:600 8px 'IBM Plex Mono';color:${i === s.pi ? "#d9a15b" : "rgba(231,224,210,.4)"};background:#121009;padding:1px 3px`,
@@ -1074,23 +1134,29 @@ class Component extends DCLogic {
     });
 
     const open = s.railOpen ? s.expanded : null;
+    let sectionIndex = 0;
     const railItems = [
-      { key: "type", icon: "A", name: "Type", tint: "#d9a15b", on: s.tool === "type", panel: true, act: this.openSection("type", "type") },
-      { key: "select", icon: "⬚", name: "Select", tint: "#7fb0e6", on: s.tool === "select", act: this.setTool("select") },
-      { key: "draw", icon: "✎", name: "Draw", tint: "#e8cf62", on: s.tool === "draw", panel: true, act: this.openSection("draw", "draw") },
-      { key: "whiteout", icon: "🧴", name: "Whiteout", tint: "#e2b06c", on: open === "whiteout", panel: true, act: this.openSection("whiteout") },
-      { key: "paper", icon: "◐", name: "Paper and ribbon", tint: "#d9a15b", on: open === "paper", panel: true, act: this.openSection("paper") },
-      { key: "page", icon: "▤", name: "Pages", tint: "#d9a15b", on: open === "page", panel: true, act: this.openSection("page") },
-       { key: "sound", icon: "♪", name: s.prefs.sound ? "Sound on" : "Sound off", tint: "#d9a15b", on: s.prefs.sound, act: this.toggleSound },
-      { key: "settings", icon: "⚙", name: "Settings", tint: "#d9a15b", on: open === "settings", panel: true, act: this.openSection("settings") },
+      { key: "modes", name: "Modes", isSection: true },
+      { key: "type", icon: "A", name: "Type", tint: "#d9a15b", on: s.tool === "type", panel: true, isControl: true, act: this.openSection("type", "type") },
+      { key: "select", icon: "⬚", name: "Select", tint: "#d9a15b", on: s.tool === "select", isControl: true, act: this.setTool("select") },
+      { key: "draw", icon: "✎", name: "Draw", tint: "#d9a15b", on: s.tool === "draw", panel: true, isControl: true, act: this.openSection("draw", "draw") },
+      { key: "correction", name: "Correction", isSection: true },
+      { key: "whiteout", icon: "🧴", name: "Whiteout", tint: "#d9a15b", on: open === "whiteout", panel: true, isControl: true, act: this.openSection("whiteout") },
+      { key: "document", name: "Document", isSection: true },
+      { key: "paper", icon: "◐", name: "Paper and ribbon", tint: "#d9a15b", on: open === "paper", panel: true, isControl: true, act: this.openSection("paper") },
+      { key: "preferences", name: "Preferences", isSection: true },
+      { key: "settings", icon: "⚙", name: "Settings", tint: "#d9a15b", on: open === "settings", panel: true, isControl: true, act: this.openSection("settings") },
     ].map(it => {
+      if (it.isSection) {
+        const first = sectionIndex++ === 0;
+        return { ...it, sectionStyle: `flex:none;margin:0 8px;padding:${first ? "5px" : "14px"} 10px 5px;border-top:${first ? "0" : "1px solid rgba(255,255,255,.07)"};font:600 8.5px 'IBM Plex Mono';letter-spacing:.16em;text-transform:uppercase;color:rgba(231,224,210,.34)` };
+      }
       const c = it.tint, isOpen = open === it.key;
       return { ...it,
         openDraw: isOpen && it.key === "draw",
         openType: isOpen && it.key === "type",
         openWhite: isOpen && it.key === "whiteout",
         openPaper: isOpen && it.key === "paper",
-        openPage: isOpen && it.key === "page",
         openSettings: isOpen && it.key === "settings",
         caret: it.panel ? (isOpen ? "▾" : "▸") : "",
         caretStyle: it.panel && s.railOpen ? `margin-left:auto;font:600 9px 'IBM Plex Mono';color:${isOpen ? c : "rgba(231,224,210,.35)"}` : "display:none",
@@ -1104,7 +1170,7 @@ class Component extends DCLogic {
     const nibs = Object.keys(NIBS).map(k => ({ key: k, name: NIBS[k].name, pick: this.setNib(k),
       style: `flex:1;text-align:center;font:500 10.5px 'IBM Plex Sans';border-radius:5px;padding:5px 0;cursor:pointer;white-space:nowrap;${curNib === k ? "background:#d9a15b;color:#1a1712" : "color:rgba(231,224,210,.6);border:1px solid rgba(255,255,255,.1)"}`}));
 
-    const pA = this.sw(s.prefs.rulers), pB = this.sw(s.prefs.rail), pC = this.sw(s.prefs.drawer);
+    const pA = this.sw(s.prefs.rulers), pB = this.sw(s.prefs.rail), pC = this.sw(s.prefs.drawer), pD = this.sw(s.prefs.sound);
     const K = 0.34, hv = s.hover;
     const hp = hv ? d.pages[hv.i] : null;
     const top = hv ? Math.max(64, Math.min(hv.y - (this.ph * K) / 2, window.innerHeight - this.ph * K - 60)) : 0;
@@ -1146,15 +1212,17 @@ class Component extends DCLogic {
         ? "position:absolute;left:50%;transform:translateX(-50%);bottom:16px;display:flex;align-items:center;gap:2px;padding:5px;background:rgba(26,23,17,.95);border:1px solid rgba(255,255,255,.1);border-radius:9px;box-shadow:0 10px 26px rgba(0,0,0,.55);z-index:8"
         : "display:none",
       // chrome
-      savedLabel: s.saved || "not saved yet",
-      machineLine: `${M.name} · ${M.pitch.toLowerCase()}`,
+      savedLabel, savedTitle,
       pitchLabel: M.pitch, autoReturnLabel: d.autoReturn ? "AUTO RETURN ON" : "AUTO RETURN OFF",
       line: s.r + 1, col: s.c + 1,
       bellText: bell <= 8 ? `▲ MARGIN BELL IN ${Math.max(0, bell)}` : M.status,
       bellStyle: bell <= 8 ? "color:#d9a15b" : "color:rgba(231,224,210,.4)",
       modeLabel: `BOLD ${s.bold ? "ON" : "OFF"} · UNDERLINE ${s.under ? "ON" : "OFF"} · ${s.tool.toUpperCase()}`,
       pageLabel: `PAGE ${s.pi + 1} OF ${d.pages.length} · ${this.S.label}`,
-      focusBadge: s.focused ? "● focused" : "○ click the page",
+      focusBadge: s.focused ? "● typing ready" : "○ select page",
+      focusHelp: s.focused
+        ? "Typing is ready. Keystrokes will go to the current page."
+        : "Click anywhere on the paper to place the caret and begin typing.",
       focusBadgeStyle: s.focused
         ? "display:flex;align-items:center;gap:6px;font:500 11px 'IBM Plex Mono';color:#d9a15b;background:rgba(217,161,91,.1);border:1px solid rgba(217,161,91,.28);border-radius:5px;padding:4px 9px;white-space:nowrap"
         : "display:flex;align-items:center;gap:6px;font:500 11px 'IBM Plex Mono';color:rgba(231,224,210,.4);border:1px solid rgba(255,255,255,.1);border-radius:5px;padding:4px 9px;white-space:nowrap",
@@ -1164,7 +1232,8 @@ class Component extends DCLogic {
       age: d.age, wear: d.wear, ink: d.ink, mwear: d.mwear, inkLabel, seedLabel: `${page.seed} · locked to page`,
       onAge: this.onNum("age"), onWear: this.onNum("wear"), onInk: this.onNum("ink"), onMwear: this.onNum("mwear"),
       swTrack2: swB.track, swKnob2: swB.knob, swTrack3: swC.track, swKnob3: swC.knob,
-      pTrack1: pA.track, pKnob1: pA.knob, pTrack2: pB.track, pKnob2: pB.knob, pTrack3: pC.track, pKnob3: pC.knob,
+      pTrack1: pA.track, pKnob1: pA.knob, pTrack2: pB.track, pKnob2: pB.knob, pTrack3: pC.track, pKnob3: pC.knob, pTrack4: pD.track, pKnob4: pD.knob,
+      soundLabel: s.prefs.sound ? "On" : "Off",
       prefRulers: () => this.savePrefs({ rulers: !s.prefs.rulers }),
       prefRail: () => this.savePrefs({ rail: !s.prefs.rail }),
       prefDrawer: () => this.savePrefs({ drawer: !s.prefs.drawer }),
