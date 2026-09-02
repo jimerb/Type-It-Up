@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Type It Up</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;height:100%;background:#100f0c;font-family:'IBM Plex Sans',system-ui,sans-serif;overflow:hidden}
+a{color:#d9a15b;text-decoration:none}a:hover{color:#eab876}
+input[type=range]{-webkit-appearance:none;appearance:none;height:3px;background:rgba(255,255,255,.12);border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#e7e0d2;box-shadow:0 1px 4px rgba(0,0,0,.6);cursor:pointer}
+@keyframes dab{0%{transform:scale(.4);opacity:0}30%{opacity:1}100%{transform:scale(1);opacity:1}}
+#tiu-print{display:none}
+@media print{
+  html,body{overflow:visible!important;height:auto!important;background:#fff!important}
+  #tiu-app{display:none!important}
+  #tiu-print{display:block!important}
+  .tiu-sheet{break-after:page;page-break-after:always}
+  .tiu-sheet:last-child{break-after:auto;page-break-after:auto}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+}
+</style></helmet>
+
+<div id="tiu-app" tabindex="0" onKeyDown="{{ onKey }}" onFocus="{{ onFocus }}" onBlur="{{ onBlur }}" onClick="{{ onAppClick }}" style="height:100vh;display:flex;flex-direction:column;background:radial-gradient(110% 80% at 50% 100%,#1f1c16 0%,#121009 75%);outline:none;color:#e7e0d2">
+
+<sc-if value="{{ chromeVisible }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;align-items:center;gap:14px;height:52px;padding:0 18px;background:linear-gradient(#26221b,#1c1913);border-bottom:1px solid rgba(0,0,0,.5);flex:none;overflow:hidden;min-width:0">
+<img src="./type-it-up-header-transparent-cropped.png" alt="Type It Up" style="width:184px;height:40px;object-fit:contain;object-position:left center;flex:none;display:block;filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))">
+<span style="font:400 10.5px 'IBM Plex Mono';color:rgba(231,224,210,.32);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto">{{ savedLabel }}</span>
+<div style="width:1px;height:20px;background:rgba(255,255,255,.09);flex:none"></div>
+<div style="display:flex;gap:6px;flex:none">
+<div onClick="{{ toggleBold }}" style="font:600 10.5px 'IBM Plex Mono';border-radius:4px;padding:5px 10px;cursor:pointer;border:1px solid transparent" style-hover="border-color:rgba(255,255,255,.18)" data-on="{{ boldOn }}"><span style="{{ boldStyle }}">B</span></div>
+<div onClick="{{ toggleUnder }}" style="font:600 10.5px 'IBM Plex Mono';border-radius:4px;padding:5px 10px;cursor:pointer;border:1px solid transparent" style-hover="border-color:rgba(255,255,255,.18)"><span style="{{ underStyle }}">U</span></div>
+<div onClick="{{ undo }}" style="font:600 12px 'IBM Plex Mono';color:rgba(231,224,210,.6);border-radius:4px;padding:4px 10px;cursor:pointer" style-hover="color:#e7e0d2">↺</div>
+<div onClick="{{ redo }}" style="font:600 12px 'IBM Plex Mono';color:rgba(231,224,210,.6);border-radius:4px;padding:4px 10px;cursor:pointer" style-hover="color:#e7e0d2">↻</div>
+</div>
+<div style="width:1px;height:20px;background:rgba(255,255,255,.09);flex:none"></div>
+<span style="font:500 11px 'IBM Plex Sans';color:rgba(231,224,210,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto">{{ machineLine }}</span>
+<div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex:none">
+<span style="{{ focusBadgeStyle }}">{{ focusBadge }}</span>
+<div onClick="{{ openNew }}" style="font:500 11px 'IBM Plex Sans';color:rgba(231,224,210,.6);cursor:pointer;white-space:nowrap;flex:none" style-hover="color:#e7e0d2">New document</div>
+<div onClick="{{ toggleFullscreen }}" style="{{ fsBtnStyle }}" style-hover="color:#e7e0d2;border-color:rgba(255,255,255,.22)">{{ fsLabel }}</div>
+<div onClick="{{ doPrint }}" style="font:600 11px 'IBM Plex Sans';color:#1a1712;background:#e7e0d2;border-radius:5px;padding:6px 12px;cursor:pointer;flex:none;white-space:nowrap">Export</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ immersive }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ toggleFullscreen }}" style="position:fixed;top:14px;right:18px;z-index:35;font:500 11px 'IBM Plex Sans';color:#d9a15b;background:rgba(26,23,17,.9);border:1px solid rgba(217,161,91,.4);border-radius:6px;padding:7px 12px;cursor:pointer;white-space:nowrap;box-shadow:0 8px 22px rgba(0,0,0,.5)" style-hover="background:rgba(217,161,91,.16)">⤡ Exit full screen</div>
+</sc-if>
+
+<div style="flex:1;display:flex;min-height:0;min-width:0;overflow:hidden">
+
+<sc-if value="{{ showThumbnailRail }}" hint-placeholder-val="{{ true }}">
+<div style="width:112px;border-right:1px solid rgba(255,255,255,.05);padding:14px 0;display:flex;flex-direction:column;align-items:center;gap:11px;overflow:auto;flex:none">
+<span style="font:600 8.5px 'IBM Plex Mono';color:rgba(231,224,210,.32);letter-spacing:.14em">PAGES</span>
+<sc-for list="{{ thumbs }}" as="t" hint-placeholder-count="2">
+<div onClick="{{ t.select }}" onMouseEnter="{{ t.hover }}" onMouseLeave="{{ unhover }}" style="{{ t.style }}">
+<div style="position:absolute;inset:0;background-image:url(data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%3E%3Cfilter%20id%3D%27n%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.9%27%20numOctaves%3D%274%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27100%25%27%20height%3D%27100%25%27%20filter%3D%27url%28%23n%29%27%2F%3E%3C%2Fsvg%3E);opacity:.1;mix-blend-mode:multiply"></div>
+<sc-for list="{{ t.bars }}" as="b" hint-placeholder-count="3"><div style="{{ b.style }}"></div></sc-for>
+<div style="{{ t.numStyle }}">{{ t.num }}</div>
+<div onClick="{{ t.trash }}" title="Throw this page away" style="{{ t.trashStyle }}">🗑</div>
+</div>
+</sc-for>
+<div onClick="{{ addPage }}" style="width:62px;height:34px;border:1px dashed rgba(231,224,210,.22);display:flex;align-items:center;justify-content:center;font:400 15px 'IBM Plex Mono';color:rgba(231,224,210,.35);cursor:pointer;flex:none" style-hover="border-color:#d9a15b;color:#d9a15b">+</div>
+</div>
+</sc-if>
+
+<div style="{{ previewStyle }}">
+<div style="{{ previewPaperStyle }}">
+<sc-for list="{{ previewStrikes }}" as="s" hint-placeholder-count="0"><div style="{{ s.style }}">{{ s.ch }}</div></sc-for>
+<sc-for list="{{ previewWhiteouts }}" as="w" hint-placeholder-count="0"><div style="{{ w.style }}"></div></sc-for>
+<sc-for list="{{ previewHighlights }}" as="h" hint-placeholder-count="0"><div style="{{ h.style }}"></div></sc-for>
+<svg viewBox="{{ svgBox }}" style="{{ svgStyle }}">
+<sc-for list="{{ previewStrokes }}" as="p" hint-placeholder-count="0"><path d="{{ p.d }}" fill="none" stroke="{{ p.stroke }}" stroke-width="{{ p.w }}" stroke-linecap="round" stroke-linejoin="round" opacity="{{ p.o }}"></path></sc-for>
+</svg>
+</div>
+<div style="{{ previewCapStyle }}">{{ previewCap }}</div>
+</div>
+
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;position:relative;overflow:hidden">
+
+<sc-if value="{{ showRulers }}" hint-placeholder-val="{{ true }}">
+<div style="height:26px;background:#1a1710;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:center;flex:none;overflow:hidden;min-width:0">
+<div style="{{ rulerStyle }}">
+<div style="{{ rulerTicksStyle }}"></div>
+<div style="{{ rulerInchStyle }}"></div>
+<div style="{{ leftStopStyle }}"></div>
+<div style="{{ rightStopStyle }}"></div>
+<div style="{{ colFlagStyle }}">COL {{ col }}</div>
+</div>
+</div>
+</sc-if>
+
+<div id="tiu-wrap" onWheel="{{ onWheel }}" style="flex:1;position:relative;overflow:hidden;min-height:0;min-width:0">
+<div style="{{ bandStyle }}"></div>
+<div style="{{ bandArrowStyle }}">▸</div>
+<div data-editor-surface="true" onPointerDown="{{ onPaperDown }}" onPointerMove="{{ onPaperMove }}" onPointerUp="{{ onPaperUp }}" style="{{ paperStyle }}">
+<div style="position:absolute;inset:0;background-image:url(data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%3E%3Cfilter%20id%3D%27n%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.9%27%20numOctaves%3D%274%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27100%25%27%20height%3D%27100%25%27%20filter%3D%27url%28%23n%29%27%2F%3E%3C%2Fsvg%3E);mix-blend-mode:multiply;pointer-events:none;opacity:{{ wearOpacity }}"></div>
+<div style="{{ vignetteStyle }}"></div>
+<sc-for list="{{ specks }}" as="k" hint-placeholder-count="0"><div style="{{ k.style }}"></div></sc-for>
+<sc-for list="{{ buried }}" as="s" hint-placeholder-count="0"><div style="{{ s.style }}">{{ s.ch }}</div></sc-for>
+<sc-for list="{{ whiteouts }}" as="w" hint-placeholder-count="0"><div style="{{ w.style }}"></div></sc-for>
+<sc-for list="{{ strikes }}" as="s" hint-placeholder-count="0"><div style="{{ s.style }}">{{ s.ch }}</div></sc-for>
+<sc-for list="{{ highlights }}" as="h" hint-placeholder-count="0"><div style="{{ h.style }}"></div></sc-for>
+<svg viewBox="{{ svgBox }}" style="{{ svgStyle }}">
+<sc-for list="{{ inkStrokes }}" as="p" hint-placeholder-count="0"><path d="{{ p.d }}" fill="none" stroke="{{ p.stroke }}" stroke-width="{{ p.w }}" stroke-linecap="round" stroke-linejoin="round" opacity="{{ p.o }}"></path></sc-for>
+<path d="{{ liveD }}" fill="none" stroke="{{ liveStroke }}" stroke-width="{{ liveW }}" stroke-linecap="round" stroke-linejoin="round" opacity="{{ liveO }}"></path>
+</svg>
+<div style="{{ caretStyle }}"></div>
+<div style="{{ marqueeStyle }}"></div>
+<div style="{{ pageNumStyle }}">— {{ pageNum }} —</div>
+</div>
+<div style="{{ selBarStyle }}">
+<div onClick="{{ cut }}" style="font:500 11px 'IBM Plex Sans';color:#e7e0d2;padding:5px 10px;border-radius:5px;cursor:pointer" style-hover="background:rgba(255,255,255,.08)">Cut</div>
+<div onClick="{{ copy }}" style="font:500 11px 'IBM Plex Sans';color:#e7e0d2;padding:5px 10px;border-radius:5px;cursor:pointer" style-hover="background:rgba(255,255,255,.08)">Copy</div>
+<div onClick="{{ paste }}" style="font:500 11px 'IBM Plex Sans';color:#e7e0d2;padding:5px 10px;border-radius:5px;cursor:pointer" style-hover="background:rgba(255,255,255,.08)">Paste</div>
+<div style="width:1px;height:16px;background:rgba(255,255,255,.12);margin:0 3px"></div>
+<div onClick="{{ whiteoutSel }}" style="font:500 11px 'IBM Plex Sans';color:#e2b06c;padding:5px 10px;border-radius:5px;cursor:pointer" style-hover="background:rgba(226,176,108,.12)">Whiteout</div>
+</div>
+</div>
+</div>
+
+
+
+<div style="{{ railStyle }}">
+<div onClick="{{ toggleRail }}" style="{{ railToggleStyle }}"><span style="font:600 13px 'IBM Plex Mono';width:16px;text-align:center;flex:none">{{ railChevron }}</span><span style="{{ railToggleLabelStyle }}">Tools</span></div>
+
+<div style="{{ railScrollStyle }}">
+<sc-for list="{{ railItems }}" as="t" hint-placeholder-count="7">
+<div style="display:flex;flex-direction:column;flex:none">
+<div onClick="{{ t.act }}" title="{{ t.name }}" style="{{ t.style }}">
+<span style="{{ t.iconStyle }}">{{ t.icon }}</span>
+<span style="{{ t.labelStyle }}">{{ t.name }}</span>
+<span style="{{ t.caretStyle }}">{{ t.caret }}</span>
+</div>
+
+<sc-if value="{{ t.openType }}" hint-placeholder-val="{{ false }}">
+<div style="{{ panelStyle }}">
+<div onClick="{{ toggleAutoReturn }}" style="{{ rowStyle }}"><span>Auto return</span><div style="{{ autoTrack }}"><div style="{{ autoKnob }}"></div></div></div>
+<span style="{{ noteStyle }}">Return to the left margin at the bell.</span>
+</div>
+</sc-if>
+
+<sc-if value="{{ t.openDraw }}" hint-placeholder-val="{{ false }}">
+<div style="{{ panelStyle }}">
+<div style="display:flex;gap:5px">
+<sc-for list="{{ nibs }}" as="n" hint-placeholder-count="3"><div onClick="{{ n.pick }}" style="{{ n.style }}">{{ n.name }}</div></sc-for>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<sc-for list="{{ nibSwatches }}" as="i" hint-placeholder-count="4"><div onClick="{{ i.pick }}" title="{{ i.name }}" style="{{ i.style }}"></div></sc-for>
+</div>
+<div style="{{ rowStyle }}"><span>{{ nibSizeName }}</span><span style="{{ valStyle }}">{{ nibSizeLabel }}</span></div>
+<input type="range" min="0" max="100" value="{{ nibSize }}" onChange="{{ onNibSize }}" style="width:100%;min-width:0;accent-color:#d9a15b">
+</div>
+</sc-if>
+
+<sc-if value="{{ t.openWhite }}" hint-placeholder-val="{{ false }}">
+<div style="{{ panelStyle }}">
+<div style="{{ rowStyle }}"><span>Intensity</span><span style="{{ valStyle }}">{{ markLabel }}</span></div>
+<input type="range" min="0" max="100" value="{{ markI }}" onChange="{{ onMarkI }}" style="width:100%;min-width:0;accent-color:#d9a15b">
+<div onClick="{{ whiteoutSel }}" style="{{ actionStyle }}">Apply to selection</div>
+<span style="{{ noteStyle }}">Delete key does the same thing.</span>
+</div>
+</sc-if>
+
+<sc-if value="{{ t.openPaper }}" hint-placeholder-val="{{ false }}">
+<div style="{{ panelStyle }}">
+<div style="{{ rowStyle }}"><span>Paper age</span><span style="{{ valStyle }}">{{ age }}</span></div>
+<input type="range" min="0" max="100" value="{{ age }}" onChange="{{ onAge }}" style="width:100%;min-width:0;accent-color:#d9a15b">
+<div style="{{ rowStyle }}"><span>Paper wear</span><span style="{{ valStyle }}">{{ wear }}</span></div>
+<input type="range" min="0" max="100" value="{{ wear }}" onChange="{{ onWear }}" style="width:100%;min-width:0;accent-color:#d9a15b">
+<div style="{{ rowStyle }}"><span>Ink condition</span><span style="{{ valStyle }}">{{ inkLabel }}</span></div>
+<input type="range" min="0" max="100" step="10" value="{{ ink }}" onChange="{{ onInk }}" style="width:100%;min-width:0;accent-color:#d9a15b">
+<div style="{{ rowStyle }}"><span>Machine wear</span><span style="{{ valStyle }}">{{ mwear }}</span></div>
+<input type="range" min="0" max="100" value="{{ mwear }}" onChange="{{ onMwear }}" style="width:100%;min-width:0;accent-color:#d9a15b">
+<span style="{{ subheadStyle }}">RIBBON</span>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<sc-for list="{{ inkSwatches }}" as="i" hint-placeholder-count="4"><div onClick="{{ i.pick }}" title="{{ i.name }}" style="{{ i.style }}"></div></sc-for>
+</div>
+<span style="{{ noteStyle }}">{{ inkName }}</span>
+<span style="{{ subheadStyle }}">PAPER SIZE</span>
+<div style="display:flex;gap:6px">
+<sc-for list="{{ sizeChips }}" as="z" hint-placeholder-count="3"><div onClick="{{ z.pick }}" style="{{ z.style }}">{{ z.name }}</div></sc-for>
+</div>
+<div onClick="{{ regenerate }}" style="{{ actionStyle }}">↻ Regenerate wear</div>
+<span style="{{ noteStyle }}">Seed {{ seedLabel }}</span>
+</div>
+</sc-if>
+
+<sc-if value="{{ t.openPage }}" hint-placeholder-val="{{ false }}">
+<div style="{{ panelStyle }}">
+<div onClick="{{ addPage }}" style="{{ actionStyle }}">+ Add page</div>
+<div onClick="{{ duplicatePage }}" style="{{ actionStyle }}">Duplicate page</div>
+<div onClick="{{ ejectPage }}" style="{{ dangerStyle }}">Throw this page away</div>
+<span style="{{ noteStyle }}">{{ pageCountLabel }} · undoable</span>
+</div>
+</sc-if>
+
+<sc-if value="{{ t.openSettings }}" hint-placeholder-val="{{ false }}">
+<div style="{{ panelStyle }}">
+<div onClick="{{ prefRulers }}" style="{{ rowStyle }}"><span>Show rulers</span><div style="{{ pTrack1 }}"><div style="{{ pKnob1 }}"></div></div></div>
+<div onClick="{{ prefRail }}" style="{{ rowStyle }}"><span>Show page rail</span><div style="{{ pTrack2 }}"><div style="{{ pKnob2 }}"></div></div></div>
+<div onClick="{{ prefDrawer }}" style="{{ rowStyle }}"><span>Open tools on launch</span><div style="{{ pTrack3 }}"><div style="{{ pKnob3 }}"></div></div></div>
+<span style="{{ subheadStyle }}">DEFAULT PAPER SIZE</span>
+<div style="display:flex;gap:6px">
+<sc-for list="{{ prefSizeChips }}" as="z" hint-placeholder-count="3"><div onClick="{{ z.pick }}" style="{{ z.style }}">{{ z.name }}</div></sc-for>
+</div>
+<div onClick="{{ resetPrefs }}" style="{{ actionStyle }}">Reset to defaults</div>
+<span style="{{ noteStyle }}">Saved in this browser.</span>
+</div>
+</sc-if>
+
+</div>
+</sc-for>
+</div>
+
+<div onClick="{{ openHelp }}" title="Keys and help" style="{{ helpItemStyle }}"><span style="{{ helpIconStyle }}">?</span><span style="{{ helpLabelStyle }}">Keys and help</span></div>
+</div>
+</div>
+
+<sc-if value="{{ chromeVisible }}" hint-placeholder-val="{{ true }}">
+<div style="height:36px;background:#15130d;border-top:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:18px;padding:0 20px;font:400 10.5px 'IBM Plex Mono';color:rgba(231,224,210,.4);flex:none;white-space:nowrap">
+<span style="{{ bellStyle }}">{{ bellText }}</span>
+<span>{{ pitchLabel }}</span>
+<span style="color:rgba(231,224,210,.62)">LINE {{ line }} · COL {{ col }}</span>
+<span>{{ autoReturnLabel }}</span>
+<span style="color:rgba(217,161,91,.75)">{{ modeLabel }}</span>
+<span style="margin-left:auto">{{ pageLabel }}</span>
+</div>
+</sc-if>
+
+<sc-if value="{{ helpOpen }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ closeOverlays }}" style="position:fixed;inset:0;background:rgba(12,11,8,.9);display:flex;align-items:center;justify-content:center;padding:26px;z-index:40">
+<div style="position:relative;width:496px;height:498px;background:linear-gradient(172deg,#f3ead7,#eadfc4);box-shadow:0 30px 70px rgba(0,0,0,.7)">
+<div style="position:absolute;inset:0;background-image:url(data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%3E%3Cfilter%20id%3D%27n%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.9%27%20numOctaves%3D%274%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27100%25%27%20height%3D%27100%25%27%20filter%3D%27url%28%23n%29%27%2F%3E%3C%2Fsvg%3E);opacity:.08;mix-blend-mode:multiply"></div>
+<div style="position:absolute;left:38px;top:34px;right:34px;font-family:'Courier Prime',monospace;color:#2c2620;letter-spacing:.04em">
+<div style="font-size:14px;letter-spacing:.16em;font-weight:700">KEYS AND WHAT THEY DO</div>
+<div style="font-size:11px;color:rgba(44,38,32,.6);margin-top:5px">Active only while the page has focus.</div>
+<div style="height:1px;background:rgba(44,38,32,.35);margin:14px 0 12px"></div>
+<div style="display:grid;grid-template-columns:auto 1fr;gap:9px 18px;font-size:12px;line-height:16px">
+<span style="font-weight:700">Letter</span><span>Strike, then advance one cell</span>
+<span style="font-weight:700">Space</span><span>Advance with no ink</span>
+<span style="font-weight:700">Backspace</span><span>Back one cell, nothing erased</span>
+<span style="font-weight:700">Delete</span><span>Whiteout the cell or selection</span>
+<span style="font-weight:700">Enter</span><span>Return to margin, feed a line</span>
+<span style="font-weight:700">Tab</span><span>Next tab stop</span>
+<span style="font-weight:700">Home</span><span>Left margin of this line</span>
+<span style="font-weight:700">Arrows</span><span>One cell, one line</span>
+<span style="font-weight:700">Ctrl/Cmd+B</span><span>Double-strike mode</span>
+<span style="font-weight:700">Ctrl/Cmd+U</span><span>Underscore mode</span>
+<span style="font-weight:700">Ctrl/Cmd+X C V</span><span>Cut, copy, paste strikes</span>
+<span style="font-weight:700">Ctrl/Cmd+Z</span><span>Undo · add Shift to redo</span>
+<span style="font-weight:700">Pen, pencil</span><span>Drag on the page to draw</span>
+<span style="font-weight:700">Marker</span><span>Drag across a line to stripe it</span>
+<span style="font-weight:700">Wheel</span><span>Roll the paper, one line a click</span>
+</div>
+<div style="height:1px;background:rgba(44,38,32,.25);margin:14px 0 10px"></div>
+<div style="font-size:11px;line-height:16px;color:rgba(44,38,32,.72)">Click outside the page and every one of these keys goes back to the browser.  Nothing is installed and nothing is held after you leave.</div>
+</div>
+<div style="position:absolute;right:16px;top:12px;font-family:'Courier Prime',monospace;font-size:12px;color:rgba(44,38,32,.45)">esc</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ newOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;background:rgba(12,11,8,.88);display:flex;align-items:center;justify-content:center;z-index:50">
+<div style="width:760px;background:radial-gradient(90% 80% at 50% 0%,#231f18,#131109);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:34px 38px;display:flex;flex-direction:column;gap:24px;box-shadow:0 40px 100px rgba(0,0,0,.7)">
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font:600 9.5px 'IBM Plex Mono';color:rgba(217,161,91,.8);letter-spacing:.2em">TYPE IT UP</span>
+<span style="font:400 22px 'Courier Prime',monospace;letter-spacing:.01em">Choose a machine</span>
+</div>
+<div style="display:flex;gap:16px">
+<div onClick="{{ pickOffice }}" style="{{ officeCardStyle }}">
+<div style="display:flex;align-items:baseline;justify-content:space-between">
+<span style="font:600 14px 'IBM Plex Sans'">Office Standard</span>
+<span style="{{ officeTagStyle }}">SELECTED</span>
+</div>
+<div style="font-family:'Courier Prime',monospace;font-size:17px;letter-spacing:.08em;padding:12px 0;border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.07)">Handgloves 123</div>
+<div style="display:flex;flex-direction:column;gap:5px;font:400 10.5px 'IBM Plex Mono';color:rgba(231,224,210,.5)">
+<span>PICA · 10 characters per inch</span><span>Heavier, even imprint</span><span>Stable alignment</span><span>Firm key and return</span>
+</div>
+</div>
+<div onClick="{{ pickTravel }}" style="{{ travelCardStyle }}">
+<div style="display:flex;align-items:baseline;justify-content:space-between">
+<span style="font:600 14px 'IBM Plex Sans'">Travel Portable</span>
+<span style="{{ travelTagStyle }}">SELECTED</span>
+</div>
+<div style="font-family:'Courier Prime',monospace;font-size:15px;letter-spacing:.03em;padding:12px 0;border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.07)"><span style="display:inline-block;transform:translateY(-.8px)">H</span>andglo<span style="display:inline-block;transform:translateY(.7px)">v</span>es <span style="opacity:.6">123</span></div>
+<div style="display:flex;flex-direction:column;gap:5px;font:400 10.5px 'IBM Plex Mono';color:rgba(231,224,210,.5)">
+<span>ELITE · 12 characters per inch</span><span>Lighter imprint, some dropout</span><span>Baseline drifts</span><span>Small, sharp mechanics</span>
+</div>
+</div>
+</div>
+<div style="display:flex;gap:34px;align-items:flex-start">
+<div style="display:flex;flex-direction:column;gap:9px">
+<span style="font:600 9.5px 'IBM Plex Mono';color:rgba(231,224,210,.4);letter-spacing:.14em">PAPER</span>
+<div style="display:flex;gap:6px">
+<sc-for list="{{ draftSizeChips }}" as="z" hint-placeholder-count="3"><div onClick="{{ z.pick }}" style="{{ z.style }}">{{ z.name }}</div></sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:9px">
+<span style="font:600 9.5px 'IBM Plex Mono';color:rgba(231,224,210,.4);letter-spacing:.14em">CONDITION</span>
+<div style="display:flex;gap:6px">
+<div onClick="{{ pickFresh }}" style="{{ freshChip }}">Fresh sheet</div>
+<div onClick="{{ pickAged }}" style="{{ agedChip }}">Aged</div>
+<div onClick="{{ pickUsed }}" style="{{ usedChip }}">Well used</div>
+</div>
+</div>
+</div>
+<div style="display:flex;align-items:center;gap:16px">
+<div onClick="{{ startDoc }}" style="font:600 12.5px 'IBM Plex Sans';color:#1a1712;background:#d9a15b;border-radius:8px;padding:12px 22px;cursor:pointer;white-space:nowrap" style-hover="background:#eab876">Roll in a sheet</div>
+<div onClick="{{ closeOverlays }}" style="font:500 11.5px 'IBM Plex Sans';color:rgba(231,224,210,.5);cursor:pointer;white-space:nowrap" style-hover="color:#e7e0d2">Keep the current page</div>
+<span style="margin-left:auto;font:400 10.5px 'IBM Plex Mono';color:rgba(231,224,210,.3);white-space:nowrap">Click the page once to start typing</span>
+</div>
+</div>
+</div>
+</sc-if>
+
+</div>
+
+<div id="tiu-print">
+<sc-for list="{{ printPages }}" as="pg" hint-placeholder-count="0">
+<div class="tiu-sheet" style="{{ pg.sheetStyle }}">
+<div style="{{ pg.paperStyle }}">
+<div style="{{ pg.wearStyle }}"></div>
+<div style="{{ pg.vignetteStyle }}"></div>
+<sc-for list="{{ pg.specks }}" as="k" hint-placeholder-count="0"><div style="{{ k.style }}"></div></sc-for>
+<sc-for list="{{ pg.whiteouts }}" as="w" hint-placeholder-count="0"><div style="{{ w.style }}"></div></sc-for>
+<sc-for list="{{ pg.strikes }}" as="s" hint-placeholder-count="0"><div style="{{ s.style }}">{{ s.ch }}</div></sc-for>
+<sc-for list="{{ pg.highlights }}" as="h" hint-placeholder-count="0"><div style="{{ h.style }}"></div></sc-for>
+<svg viewBox="{{ svgBox }}" style="{{ svgStyle }}">
+<sc-for list="{{ pg.strokes }}" as="p" hint-placeholder-count="0"><path d="{{ p.d }}" fill="none" stroke="{{ p.stroke }}" stroke-width="{{ p.w }}" stroke-linecap="round" stroke-linejoin="round" opacity="{{ p.o }}"></path></sc-for>
+</svg>
+<div style="{{ pg.numStyle }}">— {{ pg.num }} —</div>
+</div>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;startInFullscreen&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;typingPointOffset&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:150,&quot;min&quot;:80,&quot;max&quot;:320,&quot;step&quot;:10,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Behavior&quot;}}" data-props="{&quot;startInFullscreen&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;typingPointOffset&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:150,&quot;min&quot;:80,&quot;max&quot;:320,&quot;step&quot;:10,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Behavior&quot;}}">
+const SCALE = 80, LPI = 6;
+const SIZES = {
+  letter: { w: 8.5, h: 11, short: "Letter", label: "LETTER 8.5 × 11 in" },
+  legal: { w: 8.5, h: 14, short: "Legal", label: "LEGAL 8.5 × 14 in" },
+  a4: { w: 8.27, h: 11.69, short: "A4", label: "A4 210 × 297 mm" },
+};
+const MACHINES = {
+  office: { cpi: 10, name: "Office Standard", status: "OFFICE STANDARD", pitch: "PICA 10 cpi", jit: 0.55, ink: 1 },
+  travel: { cpi: 12, name: "Travel Portable", status: "TRAVEL PORTABLE", pitch: "ELITE 12 cpi", jit: 1.5, ink: 0.86 },
+};
+const NOISE = "url(data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%3E%3Cfilter%20id%3D%27n%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.9%27%20numOctaves%3D%274%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27100%25%27%20height%3D%27100%25%27%20filter%3D%27url%28%23n%29%27%2F%3E%3C%2Fsvg%3E)";
+const KEY = "typeitup.doc.v2", PKEY = "typeitup.prefs.v1";
+const INKS = [
+  { id: "black", name: "Black record", rgb: [38, 32, 26] },
+  { id: "bluish", name: "Blue-black", rgb: [38, 44, 74] },
+  { id: "red", name: "Correction red", rgb: [124, 40, 34] },
+  { id: "purple", name: "Purple copy", rgb: [72, 44, 84] },
+];
+const HIS = [
+  { id: "yellow", name: "Yellow", rgb: [240, 214, 88] },
+  { id: "green", name: "Green", rgb: [150, 214, 128] },
+  { id: "pink", name: "Pink", rgb: [238, 138, 168] },
+  { id: "blue", name: "Blue", rgb: [130, 186, 236] },
+];
+const NIBS = {
+  marker: { name: "Highlight", colors: HIS, min: 0.6, max: 1.3 },
+  pen: { name: "Pen", colors: [
+    { id: "black", name: "Black ink", rgb: [26, 24, 22] },
+    { id: "blue", name: "Blue ink", rgb: [34, 52, 118] },
+    { id: "red", name: "Red ink", rgb: [148, 40, 36] },
+    { id: "green", name: "Green ink", rgb: [38, 96, 62] },
+  ], min: 1.1, max: 4.2 },
+  pencil: { name: "Pencil", colors: [
+    { id: "graphite", name: "Graphite", rgb: [72, 70, 68] },
+    { id: "soft", name: "Soft 2B", rgb: [48, 46, 46] },
+    { id: "blue", name: "Blue pencil", rgb: [58, 78, 126] },
+    { id: "red", name: "Red pencil", rgb: [134, 58, 54] },
+  ], min: 1, max: 3.6 },
+};
+const nibColor = (nib, id) => NIBS[nib].colors.find(c => c.id === id) || NIBS[nib].colors[0];
+const DEFAULT_PREFS = { rulers: true, rail: true, drawer: false, size: "letter" };
+const loadPrefs = () => {
+  try { return { ...DEFAULT_PREFS, ...(JSON.parse(localStorage.getItem(PKEY)) || {}) }; }
+  catch (e) { return { ...DEFAULT_PREFS }; }
+};
+const ink = id => INKS.find(i => i.id === id) || INKS[0];
+const hiOf = id => HIS.find(i => i.id === id) || HIS[0];
+const rnd = (a, b, c) => { let h = (a * 374761393 + b * 668265263 + c * 2246822519) >>> 0; h = (h ^ (h >>> 13)) * 1274126177 >>> 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967295; };
+const seedStr = () => Math.random().toString(16).slice(2, 10);
+const newPage = () => ({ strikes: [], whiteouts: [], highlights: [], strokes: [], seed: seedStr() });
+
+class Component extends DCLogic {
+  state = {
+    doc: null, pi: 0, r: 6, c: 10, order: 1,
+    tool: "type", bold: false, under: false, focused: false,
+    prefs: loadPrefs(),
+    helpOpen: false, newOpen: false, fs: false, immersive: false, vw: 0,
+    railOpen: false, expanded: null, live: null,
+    hover: null,
+    sel: null, selAnchor: null, selFocus: null, drag: null, clip: null, saved: "",
+    draft: { machine: "office", size: "letter", condition: "fresh" },
+    undoStack: [], redoStack: [],
+  };
+
+  componentDidMount() {
+    const prefs = loadPrefs();
+    let doc = null;
+    try { const raw = localStorage.getItem(KEY); if (raw) doc = JSON.parse(raw); } catch (e) {}
+    const fsHandler = () => this.setState({ fs: !!document.fullscreenElement });
+    document.addEventListener("fullscreenchange", fsHandler);
+    this._ro = window.ResizeObserver ? new ResizeObserver(() => this.measure()) : null;
+    setTimeout(() => {
+      const el = this.wrapEl();
+      if (el && this._ro) { this._ro.observe(el); this._roNode = el; }
+      this.measure();
+    }, 60);
+    window.addEventListener("resize", this.measure);
+    window.addEventListener("blur", this.onWindowBlur);
+    if (this.props.startInFullscreen) setTimeout(() => this.toggleFullscreen(), 60);
+    this._fsHandler = fsHandler;
+    if (doc && doc.pages && doc.pages.length) {
+      this.setState({ doc: this.normalize(doc), prefs, railOpen: prefs.drawer, saved: "recovered from autosave" });
+    } else {
+      this.setState({ doc: this.blankDoc("office", prefs.size, "fresh"), prefs, railOpen: prefs.drawer, newOpen: true,
+        draft: { machine: "office", size: prefs.size, condition: "fresh" } });
+    }
+  }
+  componentWillUnmount() {
+    if (this._fsHandler) document.removeEventListener("fullscreenchange", this._fsHandler);
+    window.removeEventListener("resize", this.measure);
+    window.removeEventListener("blur", this.onWindowBlur);
+    if (this._ro) this._ro.disconnect();
+  }
+  componentDidUpdate() {
+    const el = this.wrapEl();
+    if (el && this._ro && el !== this._roNode) { try { this._ro.disconnect(); this._ro.observe(el); } catch (e) {} this._roNode = el; }
+    this.syncPageRule();
+    this.measure();
+  }
+  remeasure = () => {
+    requestAnimationFrame(() => { this.measure(); requestAnimationFrame(this.measure); });
+  };
+  get zoom() {
+    const vw = this.state.vw;
+    if (!vw) return 1;
+    return Math.min(1, Math.max(0.35, (vw - 56) / this.pw));
+  }
+
+  normalize(doc) {
+    if (!SIZES[doc.size]) doc.size = "letter";
+    if (!MACHINES[doc.machine]) doc.machine = "office";
+    if (doc.markI == null) doc.markI = doc.marks === false ? 0 : 50;
+    if (!doc.inkColor) doc.inkColor = "black";
+    if (!doc.hiColor) doc.hiColor = "yellow";
+    if (doc.hiBold == null) doc.hiBold = 50;
+    if (!doc.nib) doc.nib = "marker";
+    doc.nibColors = { marker: doc.hiColor || "yellow", pen: "black", pencil: "graphite", ...(doc.nibColors || {}) };
+    doc.nibSizes = { marker: doc.hiBold == null ? 50 : doc.hiBold, pen: 45, pencil: 40, ...(doc.nibSizes || {}) };
+    doc.pages.forEach(p => {
+      if (!p.strikes) p.strikes = [];
+      if (!p.whiteouts) p.whiteouts = [];
+      if (!p.highlights) p.highlights = [];
+      if (!p.strokes) p.strokes = [];
+      if (!p.seed) p.seed = seedStr();
+    });
+    return doc;
+  }
+
+  blankDoc(machine, size, condition) {
+    const ap = { fresh: { age: 6, wear: 4, ink: 20 }, aged: { age: 62, wear: 34, ink: 46 }, used: { age: 88, wear: 72, ink: 68 } }[condition] || { age: 6, wear: 4, ink: 20 };
+    const key = SIZES[size] ? size : "letter";
+    return { machine: MACHINES[machine] ? machine : "office", size: key, pages: [newPage()],
+      age: ap.age, wear: ap.wear, ink: ap.ink, mwear: machine === "travel" ? 42 : 18,
+      markI: 50, inkColor: "black", hiColor: "yellow", hiBold: 50, autoReturn: false, sound: true,
+      nib: "marker", nibColors: { marker: "yellow", pen: "black", pencil: "graphite" }, nibSizes: { marker: 50, pen: 45, pencil: 40 } };
+  }
+
+  // ---- metrics
+  metrics(doc) {
+    const M = MACHINES[doc.machine], S = SIZES[doc.size], cw = SCALE / M.cpi, lh = SCALE / LPI;
+    return { M, S, cw, lh, pw: S.w * SCALE, ph: S.h * SCALE, leftCol: M.cpi,
+      rightCol: Math.floor((S.w * SCALE - SCALE) / cw), lastRow: Math.floor((S.h * SCALE - SCALE) / lh) };
+  }
+  get d() { return this.state.doc; }
+  get M() { return MACHINES[this.d.machine]; }
+  get S() { return SIZES[this.d.size]; }
+  get cellW() { return SCALE / this.M.cpi; }
+  get lineH() { return SCALE / LPI; }
+  get pw() { return this.S.w * SCALE; }
+  get ph() { return this.S.h * SCALE; }
+  get leftCol() { return this.M.cpi; }
+  get rightCol() { return Math.floor((this.pw - SCALE) / this.cellW); }
+  get lastRow() { return Math.floor((this.ph - SCALE) / this.lineH); }
+  get page() { return this.d.pages[this.state.pi] || this.d.pages[0]; }
+
+  save() {
+    clearTimeout(this._t);
+    this._t = setTimeout(() => {
+      try { localStorage.setItem(KEY, JSON.stringify(this.d)); this.setState({ saved: "autosaved just now" }); }
+      catch (e) { this.setState({ saved: "autosave unavailable" }); }
+    }, 400);
+  }
+
+  mut(fn, keepSel) {
+    this.setState(s => {
+      const snap = JSON.stringify(s.doc), doc = JSON.parse(snap);
+      const pi = Math.max(0, Math.min(s.pi, doc.pages.length - 1));
+      const extra = fn(doc.pages[pi], doc, { ...s, pi }) || {};
+      return { doc, pi, undoStack: [...s.undoStack, snap].slice(-40), redoStack: [], sel: keepSel ? s.sel : null, selAnchor: keepSel ? s.selAnchor : null, selFocus: keepSel ? s.selFocus : null, ...extra };
+    }, () => this.save());
+  }
+  undo = () => this.setState(s => {
+    if (!s.undoStack.length) return {};
+    const doc = JSON.parse(s.undoStack[s.undoStack.length - 1]);
+    return { doc, pi: Math.max(0, Math.min(s.pi, doc.pages.length - 1)), hover: null,
+      undoStack: s.undoStack.slice(0, -1), redoStack: [...s.redoStack, JSON.stringify(s.doc)], sel: null, selAnchor: null, selFocus: null };
+  }, () => this.save());
+  redo = () => this.setState(s => {
+    if (!s.redoStack.length) return {};
+    const doc = JSON.parse(s.redoStack[s.redoStack.length - 1]);
+    return { doc, pi: Math.max(0, Math.min(s.pi, doc.pages.length - 1)), hover: null,
+      redoStack: s.redoStack.slice(0, -1), undoStack: [...s.undoStack, JSON.stringify(s.doc)], sel: null, selAnchor: null, selFocus: null };
+  }, () => this.save());
+
+  // ---- sound
+  beep(kind) {
+    if (!this.d.sound) return;
+    try {
+      const A = this._ac || (this._ac = new (window.AudioContext || window.webkitAudioContext)());
+      const t = A.currentTime;
+      if (kind === "bell") {
+        const o = A.createOscillator(), g = A.createGain();
+        o.frequency.value = 1720; g.gain.setValueAtTime(0.12, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+        o.connect(g).connect(A.destination); o.start(t); o.stop(t + 0.5); return;
+      }
+      if (kind === "roll") {
+        const o = A.createOscillator(), g = A.createGain(), f2 = A.createBiquadFilter();
+        f2.type = "bandpass"; f2.frequency.value = 3200; f2.Q.value = 5;
+        o.type = "square"; o.frequency.value = 220;
+        g.gain.setValueAtTime(0.05, t); g.gain.exponentialRampToValueAtTime(0.0008, t + 0.035);
+        o.connect(f2).connect(g).connect(A.destination); o.start(t); o.stop(t + 0.04); return;
+      }
+      const len = kind === "return" ? 0.16 : 0.045, buf = A.createBuffer(1, A.sampleRate * len, A.sampleRate), ch = buf.getChannelData(0);
+      for (let i = 0; i < ch.length; i++) ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / ch.length, kind === "return" ? 1.5 : 3);
+      const src = A.createBufferSource(); src.buffer = buf;
+      const f = A.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = this.d.machine === "travel" ? 2600 : 1500; f.Q.value = 1.1;
+      const g = A.createGain(); g.gain.value = kind === "return" ? 0.3 : 0.22;
+      src.connect(f).connect(g).connect(A.destination); src.start(t);
+    } catch (e) {}
+  }
+
+  // ---- typing
+  onKey = e => {
+    if (!this.d) return;
+    const k = e.key, mod = e.metaKey || e.ctrlKey;
+    if (this.state.helpOpen || this.state.newOpen) { if (k === "Escape") { e.preventDefault(); this.closeOverlays(); } return; }
+    if (!this.state.focused || e.target !== e.currentTarget) return;
+    if (mod) {
+      const L = k.toLowerCase();
+      if (L === "z") { e.preventDefault(); e.shiftKey ? this.redo() : this.undo(); }
+      else if (L === "y") { e.preventDefault(); this.redo(); }
+      else if (L === "b") { e.preventDefault(); this.setState(s => ({ bold: !s.bold })); }
+      else if (L === "u") { e.preventDefault(); this.setState(s => ({ under: !s.under })); }
+      else if (L === "x") { e.preventDefault(); this.cut(); }
+      else if (L === "c") { e.preventDefault(); this.copy(); }
+      else if (L === "v") { e.preventDefault(); this.paste(); }
+      return;
+    }
+    const move = fn => { e.preventDefault(); this.setState(s => { const m = this.metrics(s.doc); return { sel: null, selAnchor: null, selFocus: null, ...(fn(s, m) || {}) }; }); };
+    const extend = fn => { e.preventDefault(); this.setState(s => {
+      const m = this.metrics(s.doc), anchor = s.selAnchor || { r: s.r, c: s.c }, focus = s.selFocus || { r: s.r, c: s.c };
+      const next = fn(focus, m), r0 = Math.min(anchor.r, next.r), r1 = Math.max(anchor.r, next.r), c0 = Math.min(anchor.c, next.c), c1 = Math.max(anchor.c, next.c);
+      return { r: next.r, c: next.c, sel: { r0, r1, c0, c1 }, selAnchor: anchor, selFocus: next };
+    }); };
+    if (k === "Escape") { e.preventDefault(); this.setState({ sel: null, selAnchor: null, selFocus: null }); return; }
+    if (k === "Backspace") { this.beep("key"); move((s, m) => ({ c: Math.max(m.leftCol, s.c - 1) })); return; }
+    if (k === "Delete") { e.preventDefault(); this.whiteoutSel(); return; }
+    if (k === "Enter") { this.beep("return"); this.beep("roll"); move((s, m) => ({ r: Math.min(m.lastRow, s.r + 1), c: m.leftCol })); return; }
+    if (k === "Tab") { this.beep("key"); move((s, m) => ({ c: Math.min(m.rightCol, m.leftCol + Math.ceil((s.c - m.leftCol + 1) / 5) * 5) })); return; }
+    if (k === "Home") { move((s, m) => ({ c: m.leftCol })); return; }
+    if (k === "ArrowLeft") { e.shiftKey ? extend((f, m) => ({ r: f.r, c: Math.max(m.leftCol, f.c - 1) })) : move((s, m) => ({ c: Math.max(m.leftCol, s.c - 1) })); return; }
+    if (k === "ArrowRight") { e.shiftKey ? extend((f, m) => ({ r: f.r, c: Math.min(m.rightCol, f.c + 1) })) : move((s, m) => ({ c: Math.min(m.rightCol, s.c + 1) })); return; }
+    if (k === "ArrowUp") { e.shiftKey ? extend((f) => ({ r: Math.max(0, f.r - 1), c: f.c })) : move(s => { const r = Math.max(0, s.r - 1); if (r !== s.r) this.beep("roll"); return { r }; }); return; }
+    if (k === "ArrowDown") { e.shiftKey ? extend((f, m) => ({ r: Math.min(m.lastRow, f.r + 1), c: f.c })) : move((s, m) => { const r = Math.min(m.lastRow, s.r + 1); if (r !== s.r) this.beep("roll"); return { r }; }); return; }
+    if (k.length === 1) { e.preventDefault(); this.strike(k); }
+  };
+
+  strike(ch) {
+    this.beep("key");
+    this.mut((p, doc, s) => {
+      const m = this.metrics(doc), o = s.order;
+      if (ch !== " ") {
+        p.strikes.push({ r: s.r, c: s.c, ch, order: o, off: 0 });
+        if (s.bold) p.strikes.push({ r: s.r, c: s.c, ch, order: o + 0.1, off: 0.7 });
+        if (s.under) p.strikes.push({ r: s.r, c: s.c, ch: "_", order: o + 0.2, off: 0 });
+      }
+      const nc = s.c + 1;
+      if (nc > m.rightCol) {
+        this.beep("bell");
+        return doc.autoReturn
+          ? { order: o + 1, r: Math.min(m.lastRow, s.r + 1), c: m.leftCol }
+          : { order: o + 1, c: m.rightCol };
+      }
+      if (m.rightCol - nc === 8) this.beep("bell");
+      return { order: o + 1, c: nc };
+    }, true);
+  }
+
+  // ---- pointer
+  local(e) {
+    const b = e.currentTarget.getBoundingClientRect(), z = this.zoom;
+    return { x: (e.clientX - b.left) / z, y: (e.clientY - b.top) / z };
+  }
+  cellAt(p) { return { r: Math.max(0, Math.min(this.lastRow, Math.floor(p.y / this.lineH))), c: Math.max(0, Math.min(this.rightCol, Math.floor(p.x / this.cellW))) }; }
+
+  onPaperDown = e => {
+    const p = this.local(e), cell = this.cellAt(p);
+    const host = e.currentTarget.closest("[tabindex]"); if (host) host.focus();
+    this.setState({ focused: true });
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+    const t = this.state.tool;
+    if (t === "type") { this.setState({ r: cell.r, c: cell.c, sel: null, selAnchor: null, selFocus: null }); return; }
+    if (t === "draw" && this.d.nib !== "marker") { this.setState({ live: [[p.x, p.y]], sel: null, selAnchor: null, selFocus: null }); return; }
+    this.setState({ drag: { x0: p.x, y0: p.y, x1: p.x, y1: p.y }, sel: null, selAnchor: null, selFocus: null });
+  };
+  onPaperMove = e => {
+    if (this.state.live) {
+      const p = this.local(e);
+      this.setState(s => {
+        const last = s.live[s.live.length - 1];
+        if (Math.abs(last[0] - p.x) + Math.abs(last[1] - p.y) < 2) return {};
+        return { live: [...s.live, [p.x, p.y]] };
+      });
+      return;
+    }
+    if (!this.state.drag) return;
+    const p = this.local(e);
+    this.setState(s => ({ drag: { ...s.drag, x1: p.x, y1: p.y } }));
+  };
+  onPaperUp = e => {
+    if (this.state.live) {
+      const pts = this.state.live;
+      if (pts.length > 1) this.mut((p, doc, st) => {
+        p.strokes.push({ nib: doc.nib, color: doc.nibColors[doc.nib], size: doc.nibSizes[doc.nib], pts, order: st.order });
+        return { order: st.order + 1, live: null };
+      });
+      else this.setState({ live: null });
+      return;
+    }
+    const dr = this.state.drag; if (!dr) return;
+    const x0 = Math.min(dr.x0, dr.x1), x1 = Math.max(dr.x0, dr.x1), y0 = Math.min(dr.y0, dr.y1), y1 = Math.max(dr.y0, dr.y1);
+    if (this.state.tool === "draw") {
+      const r = Math.floor(dr.y0 / this.lineH), c0 = Math.floor(x0 / this.cellW), c1 = Math.max(c0, Math.ceil(x1 / this.cellW) - 1);
+      if (c1 > c0) this.mut((p, doc, st) => { p.highlights.push({ r, c0, c1, order: st.order, color: doc.nibColors.marker, bold: doc.nibSizes.marker }); return { order: st.order + 1, drag: null }; });
+      else this.setState({ drag: null });
+      return;
+    }
+    const sel = { r0: Math.floor(y0 / this.lineH), r1: Math.floor(y1 / this.lineH), c0: Math.floor(x0 / this.cellW), c1: Math.floor(x1 / this.cellW) };
+    const empty = x1 - x0 < 4 && y1 - y0 < 4;
+    const anchor = this.cellAt({ x: dr.x0, y: dr.y0 }), focus = this.cellAt({ x: dr.x1, y: dr.y1 });
+    this.setState({ drag: null, sel: empty ? null : sel, selAnchor: empty ? null : anchor, selFocus: empty ? null : focus, r: focus.r, c: focus.c });
+  };
+  onWheel = e => {
+    if (!this.d) return;
+    e.preventDefault();
+    const dy = e.deltaY > 0 ? 1 : -1;
+    this.setState(s => {
+      const r = Math.max(0, Math.min(this.lastRow, s.r + dy));
+      if (r !== s.r) this.beep("roll");
+      return { r };
+    });
+  };
+
+  inSel(o, sel) {
+    const c1 = o.c1 != null ? o.c1 : o.c, c0 = o.c0 != null ? o.c0 : o.c;
+    return o.r >= sel.r0 && o.r <= sel.r1 && c1 >= sel.c0 && c0 <= sel.c1;
+  }
+  strokeInSel(st, sel) {
+    return (st.pts || []).some(([x, y]) => x >= sel.c0 * this.cellW && x <= (sel.c1 + 1) * this.cellW && y >= sel.r0 * this.lineH && y <= (sel.r1 + 1) * this.lineH);
+  }
+  selBounds() {
+    const s = this.state.sel;
+    return s || { r0: this.state.r, r1: this.state.r, c0: this.state.c, c1: this.state.c };
+  }
+  copy = () => {
+    const b = this.selBounds(), p = this.page;
+    const picked = p.strikes.filter(o => this.inSel(o, b));
+    const lines = {};
+    picked.forEach(o => { lines[o.r] = lines[o.r] || {}; lines[o.r][o.c] = o.ch; });
+    const text = Object.keys(lines).sort((a, z) => a - z).map(r => {
+      const row = lines[r], cols = Object.keys(row).map(Number);
+      let out = ""; for (let i = b.c0; i <= Math.max(...cols); i++) out += row[i] || " ";
+      return out.trimEnd();
+    }).join("\n");
+    this.setState({ clip: {
+      strikes: picked.map(o => ({ ...o, r: o.r - b.r0, c: o.c - b.c0 })),
+      highlights: p.highlights.filter(o => this.inSel(o, b)).map(o => ({ ...o, r: o.r - b.r0, c0: o.c0 - b.c0, c1: o.c1 - b.c0 })),
+      strokes: (p.strokes || []).filter(st => this.strokeInSel(st, b)).map(st => ({ ...st, pts: st.pts.map(([x, y]) => [x - b.c0 * this.cellW, y - b.r0 * this.lineH]) })),
+      text,
+    } });
+    try { navigator.clipboard && navigator.clipboard.writeText(text); } catch (e) {}
+  };
+  cut = () => {
+    const b = this.selBounds();
+    this.copy();
+    this.mut(p => { p.strikes = p.strikes.filter(o => !this.inSel(o, b)); p.highlights = p.highlights.filter(o => !this.inSel(o, b)); p.strokes = (p.strokes || []).filter(st => !this.strokeInSel(st, b)); });
+  };
+  pasteText = text => {
+    if (!text) return;
+    this.mut((p, doc, st) => {
+      const m = this.metrics(doc); let r = st.r, c = st.c, order = st.order;
+      for (const ch of text.replace(/\r/g, "")) {
+        if (ch === "\n") { r = Math.min(m.lastRow, r + 1); c = m.leftCol; continue; }
+        if (ch === "\t") { c = Math.min(m.rightCol, m.leftCol + Math.ceil((c - m.leftCol + 1) / 5) * 5); continue; }
+        if (ch !== " ") {
+          p.strikes.push({ r, c, ch, order, off: 0 });
+          if (st.bold) p.strikes.push({ r, c, ch, order: order + 0.1, off: 0.7 });
+          if (st.under) p.strikes.push({ r, c, ch: "_", order: order + 0.2, off: 0 });
+        }
+        order += 1;
+        if (c >= m.rightCol) {
+          if (doc.autoReturn) { r = Math.min(m.lastRow, r + 1); c = m.leftCol; }
+        } else c += 1;
+      }
+      return { order, r, c };
+    });
+  };
+  paste = async () => {
+    const clip = this.state.clip;
+    if (!clip) {
+      try { this.pasteText(await navigator.clipboard?.readText()); } catch (e) {}
+      return;
+    }
+    this.mut((p, doc, st) => {
+      clip.strikes.forEach((o, i) => p.strikes.push({ ...o, r: o.r + st.r, c: o.c + st.c, order: st.order + i * 0.01 }));
+      clip.highlights.forEach(h => p.highlights.push({ ...h, r: h.r + st.r, c0: h.c0 + st.c, c1: h.c1 + st.c, order: st.order + 0.5 }));
+      (clip.strokes || []).forEach((stroke, i) => p.strokes.push({ ...stroke, pts: stroke.pts.map(([x, y]) => [x + st.c * this.cellW, y + st.r * this.lineH]), order: st.order + 0.6 + i * 0.01 }));
+      return { order: st.order + 1 };
+    });
+  };
+  whiteoutSel = () => {
+    this.beep("key");
+    this.mut((p, doc, s) => {
+      const b = s.sel || { r0: s.r, r1: s.r, c0: s.c, c1: s.c };
+      for (let r = b.r0; r <= b.r1; r++) p.whiteouts.push({ r, c0: b.c0, c1: b.c1, order: s.order, fresh: Date.now() });
+      return { order: s.order + 1, sel: null, selAnchor: null, selFocus: null };
+    });
+  };
+
+  // ---- chrome actions
+  onAppClick = e => {
+    if (!e.target.closest || !e.target.closest("[data-editor-surface]")) this.setState({ focused: false });
+  };
+  onWindowBlur = () => this.setState({ focused: false });
+  onFocus = e => { if (e.target === e.currentTarget) this.setState({ focused: true }); };
+  onBlur = e => { if (e.target === e.currentTarget) this.setState({ focused: false }); };
+  openHelp = () => this.setState({ helpOpen: true });
+  savePrefs = patch => this.setState(s => {
+    const prefs = { ...s.prefs, ...patch };
+    try { localStorage.setItem(PKEY, JSON.stringify(prefs)); } catch (e) {}
+    return { prefs };
+  });
+  resetPrefs = () => this.savePrefs({ ...DEFAULT_PREFS });
+  toggleFullscreen = () => {
+    const el = document.documentElement;
+    if (document.fullscreenElement) {
+      const p = document.exitFullscreen && document.exitFullscreen();
+      if (p && p.catch) p.catch(() => this.setState({ fs: false }));
+      this.setState({ immersive: false });
+      return;
+    }
+    if (this.state.immersive) { this.setState({ immersive: false }, this.remeasure); return; }
+    if (!document.fullscreenEnabled || !el.requestFullscreen) { this.setState({ immersive: true }, this.remeasure); return; }
+    try {
+      const p = el.requestFullscreen();
+      if (p && p.catch) p.catch(() => this.setState({ immersive: true }));
+    } catch (e) { this.setState({ immersive: true }); }
+  };
+  wrapEl() {
+    const all = [...document.querySelectorAll("#tiu-wrap")].filter(n => n.offsetParent && n.clientWidth > 0);
+    return all[all.length - 1] || null;
+  }
+  measure = () => {
+    const el = this.wrapEl();
+    if (el && el.clientWidth !== this.state.vw) this.setState({ vw: el.clientWidth });
+  };
+  setHover = i => e => {
+    const b = e.currentTarget.getBoundingClientRect();
+    this.setState({ hover: { i, y: b.top + b.height / 2 } });
+  };
+  unhover = () => this.setState({ hover: null });
+  openNew = () => this.setState({ newOpen: true, draft: { machine: this.d.machine, size: this.d.size, condition: "fresh" } });
+  closeOverlays = () => this.setState({ helpOpen: false, newOpen: false });
+  setTool = t => () => this.setState({ tool: t, sel: null, selAnchor: null, selFocus: null, focused: false }, this.remeasure);
+  toggleRail = () => this.setState(s => ({ railOpen: !s.railOpen, expanded: s.railOpen ? null : s.expanded }), this.remeasure);
+  openSection = (key, tool) => () => this.setState(s => ({
+    railOpen: true,
+    expanded: s.railOpen && s.expanded === key ? null : key,
+    tool: tool || s.tool,
+    sel: tool ? null : s.sel,
+    selAnchor: tool ? null : s.selAnchor,
+    selFocus: tool ? null : s.selFocus,
+    focused: false,
+  }), this.remeasure);
+  setNib = n => () => { this.setDoc({ nib: n }); this.setState({ tool: "draw", railOpen: true, expanded: "draw" }, this.remeasure); };
+  setNibColor = id => () => this.setDoc({ nibColors: { ...this.d.nibColors, [this.d.nib]: id } });
+  onNibSize = e => this.setDoc({ nibSizes: { ...this.d.nibSizes, [this.d.nib]: Number(e.target.value) } });
+  toggleBold = () => this.setState(s => ({ bold: !s.bold }));
+  toggleUnder = () => this.setState(s => ({ under: !s.under }));
+  setDoc = patch => { const doc = { ...this.d, ...patch }, m = this.metrics(doc); this.setState(s => ({ doc, r: Math.max(0, Math.min(m.lastRow, s.r)), c: Math.max(m.leftCol, Math.min(m.rightCol, s.c)) }), this.remeasure); this.save(); };
+  onNum = k => e => this.setDoc({ [k]: Number(e.target.value) });
+  regenerate = () => this.mut(p => { p.seed = seedStr(); });
+  addPage = () => this.mut((p, d, s) => {
+    d.pages.push(newPage());
+    return { pi: d.pages.length - 1, r: 6, c: this.metrics(d).leftCol, hover: null };
+  });
+  duplicatePage = () => this.mut((p, d, s) => { d.pages.splice(s.pi + 1, 0, JSON.parse(JSON.stringify(p))); return { pi: s.pi + 1, hover: null }; });
+  ejectPage = () => {
+    if (this.d.pages.length < 2) return;
+    this.mut((p, d, s) => {
+      d.pages.splice(s.pi, 1);
+      return { pi: Math.max(0, Math.min(s.pi, d.pages.length - 1)), hover: null };
+    });
+  };
+  selectPage = i => () => this.setState(s => ({ pi: Math.max(0, Math.min(i, this.d.pages.length - 1)), sel: null, selAnchor: null, selFocus: null, focused: false, r: 6, c: this.leftCol }));
+  trashPage = i => e => {
+    e.stopPropagation();
+    if (this.d.pages.length < 2) return;
+    this.mut((p, d, s) => {
+      d.pages.splice(i, 1);
+      const pi = Math.max(0, Math.min(s.pi > i ? s.pi - 1 : s.pi, d.pages.length - 1));
+      return { pi, hover: null };
+    });
+  };
+  draft = patch => () => this.setState(s => ({ draft: { ...s.draft, ...patch } }));
+  startDoc = () => {
+    const dr = this.state.draft, size = SIZES[dr.size] ? dr.size : this.state.prefs.size;
+    this.setState({ doc: this.blankDoc(dr.machine, size, dr.condition), pi: 0, r: 6,
+      c: MACHINES[dr.machine].cpi, newOpen: false, sel: null, selAnchor: null, selFocus: null, focused: false, hover: null, undoStack: [], redoStack: [] }, () => this.save());
+  };
+  syncPageRule = () => {
+    if (!this.d) return;
+    const S = this.S;
+    let el = document.getElementById("tiu-page-rule");
+    if (!el) { el = document.createElement("style"); el.id = "tiu-page-rule"; document.head.appendChild(el); }
+    const rule = `@page{size:${S.w}in ${S.h}in;margin:0!important}`;
+    if (el.textContent !== rule) el.textContent = rule;
+  };
+  doPrint = () => { this.syncPageRule(); requestAnimationFrame(() => window.print()); };
+
+  // ---- style helpers
+  chip(on) {
+    return on
+      ? "font:500 11.5px 'IBM Plex Sans';color:#1a1712;background:#d9a15b;border-radius:6px;padding:7px 13px;cursor:pointer;white-space:nowrap"
+      : "font:500 11.5px 'IBM Plex Sans';color:rgba(231,224,210,.62);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:7px 13px;cursor:pointer;white-space:nowrap";
+  }
+  toolBtn(on, color) {
+    return on
+      ? `width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font:600 12px 'IBM Plex Mono';cursor:pointer;background:${color}22;border:1px solid ${color}55;color:${color}`
+      : "width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font:600 12px 'IBM Plex Mono';cursor:pointer;color:rgba(231,224,210,.45)";
+  }
+  swatch(rgb, on) {
+    return `width:24px;height:24px;border-radius:50%;flex:none;cursor:pointer;background:rgb(${rgb[0]},${rgb[1]},${rgb[2]});box-shadow:${on ? "0 0 0 2px #1b1811,0 0 0 3.5px #d9a15b" : "0 0 0 1px rgba(255,255,255,.18)"}`;
+  }
+  sw(on) {
+    return { track: `width:30px;height:17px;border-radius:9px;flex:none;position:relative;background:${on ? "#d9a15b" : "rgba(255,255,255,.12)"}`, knob: `position:absolute;top:2px;${on ? "right:2px" : "left:2px"};width:13px;height:13px;border-radius:50%;background:${on ? "#1b1811" : "rgba(231,224,210,.6)"}` };
+  }
+
+  renderVals() {
+    if (!this.d) return { chromeVisible: true, immersive: false, strikes: [], buried: [], whiteouts: [], highlights: [], thumbs: [], specks: [], previewStrikes: [], previewWhiteouts: [], previewHighlights: [], previewStrokes: [], inkStrokes: [], printPages: [], railItems: [], nibs: [], nibSwatches: [], previewStyle: "display:none", paperStyle: "position:absolute;left:50%;width:1px;height:1px" };
+    const s = this.state, d = this.d, M = this.M, cw = this.cellW, lh = this.lineH;
+    const machineWear = Math.max(0, Math.min(100, Number(d.mwear) || 0)) / 100;
+    const fs = cw / 0.6, jit = M.jit * (0.3 + machineWear * 4), inkBase = 0.72 + 0.28 * M.ink;
+    const page = this.page, sel = s.sel;
+    const seedHash = seed => {
+      let h = 2166136261;
+      for (const ch of String(seed || "")) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+      return h >>> 0;
+    };
+    const pageSeed = seedHash(page.seed);
+
+    const IC = ink(d.inkColor).rgb, MC = hiOf(d.nibColors ? d.nibColors.marker : "yellow").rgb;
+    const covered = (o) => page.whiteouts.some(w => w.order > o.order && w.r === o.r && o.c >= w.c0 && o.c <= w.c1);
+    const visibleHighlights = (list, whiteouts) => list.filter(h => !whiteouts.some(w => w.order > h.order && w.r === h.r && h.c1 >= w.c0 && h.c0 <= w.c1));
+    const strikeStyle = (o, seed = pageSeed) => {
+      const strikeSeed = Math.floor((o.order || 0) * 1000);
+      const jx = (rnd(o.r, o.c, seed + strikeSeed + 7) - 0.5) * jit, jy = (rnd(o.r, o.c, seed + strikeSeed + 13) - 0.5) * jit;
+      const drop = rnd(o.r, o.c, seed + strikeSeed + 29) < d.ink / 420 + machineWear * 0.45 ? 0.36 : 1;
+      const pressure = 1 - machineWear * 0.16 + rnd(o.r, o.c, seed + strikeSeed + 41) * machineWear * 0.24;
+      const op = Math.max(0.2, inkBase - (d.ink / 100) * 0.28) * drop * pressure;
+      return `position:absolute;left:${o.c * cw + jx + (o.off || 0)}px;top:${o.r * lh + jy}px;width:${cw}px;height:${lh}px;line-height:${lh}px;font-family:'Courier Prime',monospace;font-size:${fs}px;color:rgba(${IC[0]},${IC[1]},${IC[2]},${op.toFixed(3)});pointer-events:none;text-align:left`;
+    };
+    const mk = (list, seed = pageSeed) => list.map((o, i) => ({ key: "s" + i, ch: o.ch, style: strikeStyle(o, seed) }));
+
+    const woStyle = w => {
+      const mi = Math.pow((d.markI == null ? 50 : d.markI) / 100, 0.85);
+      const fresh = Date.now() - (w.fresh || 0) < 500;
+      const ag = d.age / 100;
+      const paperC = `rgb(${Math.round(249 - ag * 21)},${Math.round(242 - ag * 27)},${Math.round(229 - ag * 43)})`;
+      return `position:absolute;left:${w.c0 * cw - 1}px;top:${w.r * lh - 1}px;width:${(w.c1 - w.c0 + 1) * cw + 2}px;height:${lh + 1}px;border-radius:2px;pointer-events:none;background-color:${paperC};background-image:linear-gradient(rgba(253,251,245,${mi.toFixed(3)}),rgba(250,246,236,${mi.toFixed(3)}));box-shadow:${mi > 0.06 ? `0 0 0 .7px rgba(150,130,90,${(mi * mi * 0.4).toFixed(3)}),inset 0 0 4px rgba(150,130,90,${(mi * mi * 0.22).toFixed(3)})` : "none"};${fresh ? "animation:dab .38s ease-out" : ""}`;
+    };
+
+        const hiStyle = h => {
+      const C = hiOf(h.color || d.nibColors.marker).rgb, bold = (h.bold == null ? d.nibSizes.marker : h.bold) / 100;
+      const hgt = lh * (0.62 + bold * 0.62), a = 0.3 + bold * 0.52;
+      return `position:absolute;left:${h.c0 * cw}px;top:${h.r * lh + (lh - hgt) / 2}px;width:${(h.c1 - h.c0 + 1) * cw}px;height:${hgt.toFixed(1)}px;background:linear-gradient(90deg,rgba(${C[0]},${C[1]},${C[2]},${a.toFixed(2)}),rgba(${C[0]},${C[1]},${C[2]},${(a * 0.8).toFixed(2)}) 70%,rgba(${C[0]},${C[1]},${C[2]},${(a * 0.48).toFixed(2)}));mix-blend-mode:multiply;border-radius:2px;pointer-events:none;transform:rotate(-.25deg)`;
+    };
+
+    const age = d.age / 100;
+    const TYPEY = Math.max(80, this.props.typingPointOffset ?? 150);
+    const Z = this.zoom;
+    const px = s.vw ? Math.max(0, (s.vw - this.pw * Z) / 2) : 0;
+    const paperStyle = `position:absolute;${s.vw ? `left:${px.toFixed(1)}px` : "left:50%;margin-left:" + (-this.pw / 2) + "px"};transform:scale(${Z.toFixed(4)});transform-origin:top left;top:${TYPEY - s.r * lh * Z}px;width:${this.pw}px;height:${this.ph}px;cursor:${s.tool === "type" ? "text" : "crosshair"};background:linear-gradient(172deg,rgb(${252 - age * 20},${247 - age * 27},${238 - age * 42}) 0%,rgb(${248 - age * 22},${240 - age * 28},${226 - age * 44}) 60%,rgb(${243 - age * 26},${233 - age * 30},${215 - age * 46}) 100%);box-shadow:0 26px 64px rgba(0,0,0,.62),0 0 0 1px rgba(255,255,255,.05);touch-action:none`;
+
+    const wearMarks = seed => {
+      const ratio = Math.max(0, Math.min(100, Number(d.wear) || 0)) / 100, key = seedHash(seed), marks = [];
+      const count = Math.round(ratio * 72);
+      for (let i = 0; i < count; i++) {
+        const x = rnd(i, 1, key) * this.pw, y = rnd(i, 2, key + 3) * this.ph;
+        const kind = Math.floor(rnd(i, 4, key + 5) * 4), strength = (0.45 + rnd(i, 6, key + 7) * 0.8) * (0.04 + ratio * 0.2);
+        if (kind === 0) {
+          const w = 18 + rnd(i, 8, key) * (28 + ratio * 74), h = w * (0.35 + rnd(i, 9, key) * 0.75);
+          marks.push({ key: "k" + i, style: `position:absolute;left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;width:${w.toFixed(1)}px;height:${h.toFixed(1)}px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(112,76,35,${Math.min(0.32, strength * 1.35).toFixed(3)}) 0%,rgba(128,92,48,${(strength * 0.62).toFixed(3)}) 42%,transparent 78%);filter:blur(${(0.4 + ratio * 1.1).toFixed(1)}px);mix-blend-mode:multiply;pointer-events:none` });
+        } else if (kind === 1) {
+          const w = 28 + rnd(i, 8, key) * (38 + ratio * 92), h = 18 + rnd(i, 9, key) * (22 + ratio * 58);
+          marks.push({ key: "k" + i, style: `position:absolute;left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;width:${w.toFixed(1)}px;height:${h.toFixed(1)}px;border-radius:44% 56% 50% 42%;background:radial-gradient(ellipse at center,rgba(82,52,22,${Math.min(0.28, strength * 1.2).toFixed(3)}) 0%,rgba(153,111,58,${(strength * 0.7).toFixed(3)}) 36%,transparent 76%);box-shadow:inset 0 0 ${Math.round(4 + ratio * 8)}px rgba(68,42,18,${(strength * 0.7).toFixed(3)});filter:blur(${(0.3 + ratio * 0.7).toFixed(1)}px);mix-blend-mode:multiply;transform:rotate(${(-18 + rnd(i, 10, key) * 36).toFixed(1)}deg);pointer-events:none` });
+        } else if (kind === 2) {
+          const w = 34 + rnd(i, 8, key) * (48 + ratio * 150);
+          marks.push({ key: "k" + i, style: `position:absolute;left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;width:${w.toFixed(1)}px;height:${(1 + ratio * 2.5).toFixed(1)}px;background:linear-gradient(90deg,transparent,rgba(93,65,34,${strength.toFixed(3)}) 18%,rgba(255,249,224,${(strength * 0.7).toFixed(3)}) 52%,rgba(93,65,34,${(strength * 0.8).toFixed(3)}) 82%,transparent);box-shadow:0 1px 2px rgba(74,48,22,${(strength * 0.75).toFixed(3)});filter:blur(${(0.2 + ratio * 0.6).toFixed(1)}px);mix-blend-mode:multiply;transform:rotate(${(-10 + rnd(i, 10, key) * 20).toFixed(1)}deg);pointer-events:none` });
+        } else {
+          const sz = 1 + rnd(i, 8, key) * (2 + ratio * 5);
+          marks.push({ key: "k" + i, style: `position:absolute;left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;width:${sz.toFixed(1)}px;height:${(sz * (0.55 + rnd(i, 9, key) * 0.5)).toFixed(1)}px;border-radius:50%;background:rgba(96,66,30,${Math.min(0.38, strength * 1.6).toFixed(3)});mix-blend-mode:multiply;pointer-events:none` });
+        }
+      }
+      return marks;
+    };
+    const machineMarks = seed => {
+      const key = seedHash(String(seed) + "machine"), marks = [], count = Math.round(machineWear * 14);
+      for (let i = 0; i < count; i++) {
+        const x = rnd(i, 11, key) * this.pw, y = rnd(i, 12, key + 3) * this.ph;
+        const w = 44 + rnd(i, 13, key) * (72 + machineWear * 170), a = 0.025 + machineWear * 0.11;
+        marks.push({ key: "m" + i, style: `position:absolute;left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;width:${w.toFixed(1)}px;height:${(1 + machineWear * 2.5).toFixed(1)}px;background:linear-gradient(90deg,transparent,rgba(74,52,28,${a.toFixed(3)}) 18%,rgba(255,247,220,${(a * 0.65).toFixed(3)}) 52%,rgba(74,52,28,${(a * 0.8).toFixed(3)}) 82%,transparent);filter:blur(${(0.25 + machineWear * 0.55).toFixed(1)}px);mix-blend-mode:multiply;transform:rotate(${(-5 + rnd(i, 14, key) * 10).toFixed(1)}deg);pointer-events:none` });
+      }
+      return marks;
+    };
+    const specks = [...wearMarks(page.seed), ...machineMarks(page.seed)];
+
+    const dr = s.drag;
+    const marquee = dr && !(s.tool === "draw" && d.nib === "marker")
+      ? `position:absolute;left:${Math.min(dr.x0, dr.x1)}px;top:${Math.min(dr.y0, dr.y1)}px;width:${Math.abs(dr.x1 - dr.x0)}px;height:${Math.abs(dr.y1 - dr.y0)}px;border:1px dashed rgba(46,110,178,.9);background:rgba(70,140,210,.16);pointer-events:none`
+      : dr && s.tool === "draw" && d.nib === "marker"
+      ? `position:absolute;left:${Math.min(dr.x0, dr.x1)}px;top:${Math.floor(dr.y0 / lh) * lh + (lh - lh * (0.62 + d.nibSizes.marker / 100 * 0.62)) / 2}px;width:${Math.abs(dr.x1 - dr.x0)}px;height:${(lh * (0.62 + d.nibSizes.marker / 100 * 0.62)).toFixed(1)}px;background:rgba(${MC[0]},${MC[1]},${MC[2]},${(0.24 + d.nibSizes.marker / 100 * 0.42).toFixed(2)});mix-blend-mode:multiply;pointer-events:none`
+      : sel
+      ? `position:absolute;left:${sel.c0 * cw}px;top:${sel.r0 * lh}px;width:${(sel.c1 - sel.c0 + 1) * cw}px;height:${(sel.r1 - sel.r0 + 1) * lh}px;border:1px dashed rgba(46,110,178,.9);background:rgba(70,140,210,.14);pointer-events:none`
+      : "display:none";
+
+    const thumbs = d.pages.map((p, i) => {
+      const rows = {};
+      p.strikes.forEach(o => { rows[o.r] = Math.max(rows[o.r] || 0, o.c); });
+      const bars = Object.keys(rows).slice(0, 26).map((r, j) => ({
+        key: "b" + j,
+        style: `position:absolute;left:${(6 + (this.leftCol * cw / this.pw) * 50).toFixed(1)}px;top:${(8 + (Number(r) * lh / this.ph) * 108).toFixed(1)}px;height:2px;width:${Math.max(3, ((rows[r] - this.leftCol) * cw / this.pw) * 84).toFixed(1)}px;background:rgba(${IC[0]},${IC[1]},${IC[2]},.45)`,
+      }));
+      return {
+        key: "p" + i, num: i + 1, bars, select: this.selectPage(i), hover: this.setHover(i), trash: this.trashPage(i),
+        trashStyle: `position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:4px;display:${d.pages.length > 1 ? "flex" : "none"};align-items:center;justify-content:center;font-size:9.5px;line-height:1;background:rgba(20,18,12,.85);color:rgba(231,224,210,.72);cursor:pointer`,
+        style: `position:relative;width:74px;height:124px;flex:none;cursor:pointer;background:rgb(${248 - age * 22},${240 - age * 28},${226 - age * 44});box-shadow:${i === s.pi ? "0 0 0 2px #d9a15b,0 6px 14px rgba(0,0,0,.5)" : "0 4px 12px rgba(0,0,0,.4)"};opacity:${i === s.pi ? 1 : 0.72}`,
+        numStyle: `position:absolute;right:-1px;bottom:-1px;font:600 8px 'IBM Plex Mono';color:${i === s.pi ? "#d9a15b" : "rgba(231,224,210,.4)"};background:#121009;padding:1px 3px`,
+      };
+    });
+
+    const bell = this.rightCol - s.c;
+    const rulerW = this.pw * Z, tickPx = cw * Z, inchPx = SCALE * Z;
+    const swA = this.sw(d.autoReturn), swB = this.sw(d.autoReturn), swC = this.sw(d.sound);
+    const inkLabel = d.ink < 25 ? "fresh" : d.ink < 55 ? "even" : d.ink < 80 ? "worn" : "dry";
+
+    const pathOf = pts => pts.reduce((acc, p, i) => acc + (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1), "");
+    const nibW = (nib, size) => { const N = NIBS[nib]; return (N.min + (N.max - N.min) * (size / 100)) * (nib === "marker" ? lh * 0.5 : 1); };
+    const strokeVals = st => {
+      const C = nibColor(st.nib, st.color).rgb;
+      return { d: pathOf(st.pts), stroke: `rgb(${C[0]},${C[1]},${C[2]})`,
+        w: nibW(st.nib, st.size).toFixed(2), o: st.nib === "pencil" ? 0.62 : 0.92 };
+    };
+    const curNib = d.nib || "marker", curSize = d.nibSizes[curNib], curColor = d.nibColors[curNib];
+    const liveVals = s.live && s.live.length > 1 ? strokeVals({ nib: curNib, color: curColor, size: curSize, pts: s.live }) : null;
+
+    const PSC = 96 / SCALE;
+    const printPages = d.pages.map((p, i) => {
+      const cov = o => p.whiteouts.some(w => w.order > o.order && w.r === o.r && o.c >= w.c0 && o.c <= w.c1);
+      return {
+        key: "pp" + i, num: i + 1,
+        sheetStyle: `position:relative;width:${this.S.w}in;height:${this.S.h}in;overflow:hidden`,
+        paperStyle: `position:absolute;left:0;top:0;width:${this.pw}px;height:${this.ph}px;transform:scale(${PSC});transform-origin:top left;background:linear-gradient(172deg,rgb(${252 - age * 20},${247 - age * 27},${238 - age * 42}) 0%,rgb(${248 - age * 22},${240 - age * 28},${226 - age * 44}) 60%,rgb(${243 - age * 26},${233 - age * 30},${215 - age * 46}) 100%)`,
+        wearStyle: `position:absolute;inset:0;background-image:url(data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%3E%3Cfilter%20id%3D%27n%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.9%27%20numOctaves%3D%274%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27100%25%27%20height%3D%27100%25%27%20filter%3D%27url%28%23n%29%27%2F%3E%3C%2Fsvg%3E);mix-blend-mode:multiply;opacity:${(0.035 + (d.wear / 100) * 0.26).toFixed(3)}`,
+        vignetteStyle: `position:absolute;inset:0;background:radial-gradient(95% 75% at 55% 35%,transparent ${60 - age * 18}%,rgba(122,92,44,${(0.05 + age * 0.22).toFixed(3)}) 100%)`,
+        specks: [...wearMarks(p.seed), ...machineMarks(p.seed)],
+        strikes: p.strikes.filter(o => !cov(o)).map((o, j) => ({ key: "ps" + j, ch: o.ch, style: strikeStyle(o, seedHash(p.seed)) })),
+        whiteouts: p.whiteouts.map((w, j) => ({ key: "pw" + j, style: woStyle({ ...w, fresh: 0 }) })),
+        highlights: visibleHighlights(p.highlights, p.whiteouts).map((h, j) => ({ key: "ph" + j, style: hiStyle(h) })),
+        strokes: (p.strokes || []).map((st, j) => ({ key: "pt" + j, ...strokeVals(st) })),
+        numStyle: `position:absolute;left:${SCALE}px;top:${this.ph - SCALE + 10}px;font-family:'Courier Prime',monospace;font-size:12px;color:rgba(51,44,34,.45)`,
+      };
+    });
+
+    const open = s.railOpen ? s.expanded : null;
+    const railItems = [
+      { key: "type", icon: "A", name: "Type", tint: "#d9a15b", on: s.tool === "type", panel: true, act: this.openSection("type", "type") },
+      { key: "select", icon: "⬚", name: "Select", tint: "#7fb0e6", on: s.tool === "select", act: this.setTool("select") },
+      { key: "draw", icon: "✎", name: "Draw", tint: "#e8cf62", on: s.tool === "draw", panel: true, act: this.openSection("draw", "draw") },
+      { key: "whiteout", icon: "🧴", name: "Whiteout", tint: "#e2b06c", on: open === "whiteout", panel: true, act: this.openSection("whiteout") },
+      { key: "paper", icon: "◐", name: "Paper and ribbon", tint: "#d9a15b", on: open === "paper", panel: true, act: this.openSection("paper") },
+      { key: "page", icon: "▤", name: "Pages", tint: "#d9a15b", on: open === "page", panel: true, act: this.openSection("page") },
+      { key: "sound", icon: "♪", name: d.sound ? "Sound on" : "Sound off", tint: "#d9a15b", on: d.sound, act: () => this.setDoc({ sound: !d.sound }) },
+      { key: "settings", icon: "⚙", name: "Settings", tint: "#d9a15b", on: open === "settings", panel: true, act: this.openSection("settings") },
+    ].map(it => {
+      const c = it.tint, isOpen = open === it.key;
+      return { ...it,
+        openDraw: isOpen && it.key === "draw",
+        openType: isOpen && it.key === "type",
+        openWhite: isOpen && it.key === "whiteout",
+        openPaper: isOpen && it.key === "paper",
+        openPage: isOpen && it.key === "page",
+        openSettings: isOpen && it.key === "settings",
+        caret: it.panel ? (isOpen ? "▾" : "▸") : "",
+        caretStyle: it.panel && s.railOpen ? `margin-left:auto;font:600 9px 'IBM Plex Mono';color:${isOpen ? c : "rgba(231,224,210,.35)"}` : "display:none",
+
+        style: `display:flex;align-items:center;gap:10px;cursor:pointer;flex:none;border-radius:8px;margin:1px 8px;padding:${s.railOpen ? "7px 10px" : "0"};height:${s.railOpen ? "auto" : "34px"};justify-content:${s.railOpen ? "flex-start" : "center"};background:${it.on ? c + "22" : "transparent"};border:1px solid ${it.on ? c + "55" : "transparent"};color:${it.on ? c : "rgba(231,224,210,.55)"};box-sizing:border-box`,
+        iconStyle: `font:600 12px 'IBM Plex Mono';width:${s.railOpen ? "16px" : "34px"};text-align:center;flex:none`,
+        labelStyle: s.railOpen ? "font:500 11.5px 'IBM Plex Sans';white-space:nowrap;flex:none" : "display:none",
+      };
+    });
+
+    const nibs = Object.keys(NIBS).map(k => ({ key: k, name: NIBS[k].name, pick: this.setNib(k),
+      style: `flex:1;text-align:center;font:500 10.5px 'IBM Plex Sans';border-radius:5px;padding:5px 0;cursor:pointer;white-space:nowrap;${curNib === k ? "background:#d9a15b;color:#1a1712" : "color:rgba(231,224,210,.6);border:1px solid rgba(255,255,255,.1)"}`}));
+
+    const pA = this.sw(s.prefs.rulers), pB = this.sw(s.prefs.rail), pC = this.sw(s.prefs.drawer);
+    const K = 0.34, hv = s.hover;
+    const hp = hv ? d.pages[hv.i] : null;
+    const top = hv ? Math.max(64, Math.min(hv.y - (this.ph * K) / 2, window.innerHeight - this.ph * K - 60)) : 0;
+    const prev = hp ? {
+      previewStyle: `position:fixed;left:120px;top:${top.toFixed(0)}px;z-index:30;pointer-events:none;display:flex;flex-direction:column;gap:6px`,
+      previewPaperStyle: `position:relative;width:${this.pw}px;height:${this.ph}px;transform:scale(${K});transform-origin:top left;margin-right:${(-this.pw * (1 - K)).toFixed(0)}px;margin-bottom:${(-this.ph * (1 - K)).toFixed(0)}px;background:linear-gradient(172deg,rgb(${252 - age * 20},${247 - age * 27},${238 - age * 42}),rgb(${243 - age * 26},${233 - age * 30},${215 - age * 46}));box-shadow:0 18px 50px rgba(0,0,0,.7),0 0 0 1px rgba(217,161,91,.35);overflow:hidden`,
+      previewStrikes: mk(hp.strikes),
+      previewWhiteouts: hp.whiteouts.map((w, i) => ({ key: "pw" + i, style: woStyle(w) })),
+      previewHighlights: hp.highlights.map((h, i) => ({ key: "ph" + i, style: hiStyle(h) })),
+      previewStrokes: (hp.strokes || []).map((st, i) => ({ key: "pst" + i, ...strokeVals(st) })),
+      previewCapStyle: `font:600 9px 'IBM Plex Mono';color:#d9a15b;letter-spacing:.14em;background:rgba(20,18,12,.9);border-radius:4px;padding:3px 7px;align-self:flex-start`,
+      previewCap: `PAGE ${hv.i + 1} · ${this.S.short.toUpperCase()}`,
+    } : { previewStyle: "display:none", previewPaperStyle: "display:none", previewStrikes: [], previewWhiteouts: [], previewHighlights: [], previewStrokes: [], previewCapStyle: "display:none", previewCap: "" };
+
+    return {
+      showRulers: s.prefs.rulers && !s.immersive,
+      showThumbnailRail: s.prefs.rail && !s.immersive,
+      chromeVisible: !s.immersive,
+      immersive: s.immersive,
+      strikes: mk(page.strikes.filter(o => !covered(o))),
+      buried: mk(page.strikes.filter(covered)),
+      whiteouts: page.whiteouts.map((w, i) => ({ key: "w" + i, style: woStyle(w) })),
+      highlights: visibleHighlights(page.highlights, page.whiteouts).map((h, i) => ({ key: "h" + i, style: hiStyle(h) })),
+      specks, thumbs, paperStyle, printPages, marqueeStyle: marquee,
+      wearOpacity: (0.035 + (d.wear / 100) * 0.26).toFixed(3),
+      vignetteStyle: `position:absolute;inset:0;pointer-events:none;background:radial-gradient(95% 75% at 55% 35%,transparent ${60 - age * 18}%,rgba(122,92,44,${(0.05 + age * 0.22).toFixed(3)}) 100%)`,
+      caretStyle: `position:absolute;left:${s.c * cw}px;top:${s.r * lh}px;width:${cw}px;height:${lh}px;border-bottom:2px solid ${s.focused ? "#c1863f" : "rgba(193,134,63,.4)"};pointer-events:none`,
+      bandStyle: `position:absolute;left:0;right:0;top:${TYPEY}px;height:${(lh * Z).toFixed(1)}px;border-top:1px solid rgba(217,161,91,.45);border-bottom:1px solid rgba(217,161,91,.18);background:linear-gradient(rgba(217,161,91,.09),transparent);pointer-events:none;z-index:5`,
+      bandArrowStyle: `position:absolute;left:8px;top:${TYPEY - 2}px;font:600 9px 'IBM Plex Mono';color:#d9a15b;z-index:6`,
+      pageNumStyle: `position:absolute;left:${SCALE}px;top:${this.ph - SCALE + 10}px;font-family:'Courier Prime',monospace;font-size:12px;color:rgba(51,44,34,.45);pointer-events:none`,
+      pageNum: s.pi + 1,
+      rulerStyle: `position:relative;width:${rulerW.toFixed(1)}px;height:100%`,
+      rulerTicksStyle: `position:absolute;left:0;right:0;bottom:0;height:8px;background-image:repeating-linear-gradient(90deg,rgba(231,224,210,.3) 0 1px,transparent 1px ${tickPx.toFixed(2)}px)`,
+      rulerInchStyle: `position:absolute;left:0;right:0;bottom:0;height:13px;background-image:repeating-linear-gradient(90deg,rgba(231,224,210,.45) 0 1px,transparent 1px ${inchPx.toFixed(2)}px)`,
+      leftStopStyle: `position:absolute;left:${this.leftCol * cw * Z}px;bottom:0;width:7px;height:20px;background:#d9a15b;clip-path:polygon(0 0,100% 0,50% 100%)`,
+      rightStopStyle: `position:absolute;left:${this.rightCol * cw * Z}px;bottom:0;width:7px;height:20px;background:#d9a15b;clip-path:polygon(0 0,100% 0,50% 100%)`,
+      colFlagStyle: `position:absolute;left:${Math.max(0, s.c * cw * Z - 18)}px;bottom:13px;font:600 8px 'IBM Plex Mono';color:#d9a15b;letter-spacing:.1em;white-space:nowrap`,
+      selBarStyle: sel
+        ? "position:absolute;left:50%;transform:translateX(-50%);bottom:16px;display:flex;align-items:center;gap:2px;padding:5px;background:rgba(26,23,17,.95);border:1px solid rgba(255,255,255,.1);border-radius:9px;box-shadow:0 10px 26px rgba(0,0,0,.55);z-index:8"
+        : "display:none",
+      // chrome
+      savedLabel: s.saved || "not saved yet",
+      machineLine: `${M.name} · ${M.pitch.toLowerCase()}`,
+      pitchLabel: M.pitch, autoReturnLabel: d.autoReturn ? "AUTO RETURN ON" : "AUTO RETURN OFF",
+      line: s.r + 1, col: s.c + 1,
+      bellText: bell <= 8 ? `▲ MARGIN BELL IN ${Math.max(0, bell)}` : M.status,
+      bellStyle: bell <= 8 ? "color:#d9a15b" : "color:rgba(231,224,210,.4)",
+      modeLabel: `BOLD ${s.bold ? "ON" : "OFF"} · UNDERLINE ${s.under ? "ON" : "OFF"} · ${s.tool.toUpperCase()}`,
+      pageLabel: `PAGE ${s.pi + 1} OF ${d.pages.length} · ${this.S.label}`,
+      focusBadge: s.focused ? "● focused" : "○ click the page",
+      focusBadgeStyle: s.focused
+        ? "display:flex;align-items:center;gap:6px;font:500 11px 'IBM Plex Mono';color:#d9a15b;background:rgba(217,161,91,.1);border:1px solid rgba(217,161,91,.28);border-radius:5px;padding:4px 9px;white-space:nowrap"
+        : "display:flex;align-items:center;gap:6px;font:500 11px 'IBM Plex Mono';color:rgba(231,224,210,.4);border:1px solid rgba(255,255,255,.1);border-radius:5px;padding:4px 9px;white-space:nowrap",
+      boldStyle: s.bold ? "color:#d9a15b" : "color:rgba(231,224,210,.55)",
+      underStyle: s.under ? "color:#d9a15b;text-decoration:underline" : "color:rgba(231,224,210,.55);text-decoration:underline",
+      helpOpen: s.helpOpen, newOpen: s.newOpen,
+      age: d.age, wear: d.wear, ink: d.ink, mwear: d.mwear, inkLabel, seedLabel: `${page.seed} · locked to page`,
+      onAge: this.onNum("age"), onWear: this.onNum("wear"), onInk: this.onNum("ink"), onMwear: this.onNum("mwear"),
+      swTrack2: swB.track, swKnob2: swB.knob, swTrack3: swC.track, swKnob3: swC.knob,
+      pTrack1: pA.track, pKnob1: pA.knob, pTrack2: pB.track, pKnob2: pB.knob, pTrack3: pC.track, pKnob3: pC.knob,
+      prefRulers: () => this.savePrefs({ rulers: !s.prefs.rulers }),
+      prefRail: () => this.savePrefs({ rail: !s.prefs.rail }),
+      prefDrawer: () => this.savePrefs({ drawer: !s.prefs.drawer }),
+      resetPrefs: this.resetPrefs,
+      prefSizeChips: Object.keys(SIZES).map(k => ({ key: k, name: SIZES[k].short, style: this.chip(s.prefs.size === k), pick: () => this.savePrefs({ size: k }) })),
+      sizeChips: Object.keys(SIZES).map(k => ({ key: k, name: SIZES[k].short, style: this.chip(d.size === k), pick: () => this.setDoc({ size: k }) })),
+      draftSizeChips: Object.keys(SIZES).map(k => ({ key: k, name: SIZES[k].short, style: this.chip(s.draft.size === k), pick: this.draft({ size: k }) })),
+      markI: d.markI == null ? 50 : d.markI,
+      markLabel: (d.markI == null ? 50 : d.markI) < 3 ? "off" : (d.markI < 35 ? "faint" : d.markI < 70 ? "medium" : "opaque"),
+      onMarkI: this.onNum("markI"),
+      inkSwatches: INKS.map(i => ({ key: i.id, name: i.name, style: this.swatch(i.rgb, d.inkColor === i.id), pick: () => this.setDoc({ inkColor: i.id }) })),
+      inkName: ink(d.inkColor).name,
+      toggleFullscreen: this.toggleFullscreen,
+      fsLabel: (s.fs || s.immersive) ? "⤡ Exit full screen" : "⛶ Full screen",
+      fsBtnStyle: `font:500 11px 'IBM Plex Sans';color:${(s.fs || s.immersive) ? "#d9a15b" : "rgba(231,224,210,.55)"};cursor:pointer;flex:none;white-space:nowrap;border:1px solid ${(s.fs || s.immersive) ? "rgba(217,161,91,.4)" : "rgba(255,255,255,.1)"};border-radius:5px;padding:5px 10px`,
+      unhover: this.unhover,
+      svgBox: `0 0 ${this.pw} ${this.ph}`,
+      svgStyle: `position:absolute;left:0;top:0;width:${this.pw}px;height:${this.ph}px;pointer-events:none;overflow:visible`,
+      inkStrokes: (page.strokes || []).map((st, i) => ({ key: "st" + i, ...strokeVals(st) })),
+      liveD: liveVals ? liveVals.d : "", liveStroke: liveVals ? liveVals.stroke : "none",
+      liveW: liveVals ? liveVals.w : "0", liveO: liveVals ? liveVals.o : "0",
+      railStyle: `width:${s.railOpen ? 250 : 54}px;border-left:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;padding-top:12px;flex:none;background:#17150f;box-sizing:border-box;overflow:hidden`,
+      railScrollStyle: "flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;padding-bottom:6px",
+      panelStyle: `margin:2px 8px 8px ${s.railOpen ? "26px" : "8px"};padding:12px;border-radius:9px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;gap:9px`,
+      rowStyle: "display:flex;align-items:center;justify-content:space-between;gap:8px;font:500 10.5px 'IBM Plex Sans';color:rgba(231,224,210,.72);white-space:nowrap;cursor:pointer",
+      valStyle: "font-family:'IBM Plex Mono';color:#d9a15b",
+      subheadStyle: "font:600 9px 'IBM Plex Mono';color:rgba(231,224,210,.35);letter-spacing:.14em;margin-top:3px",
+      noteStyle: "font:400 9.5px 'IBM Plex Mono';color:rgba(231,224,210,.34)",
+      actionStyle: "font:500 10.5px 'IBM Plex Sans';color:#d9a15b;border:1px solid rgba(217,161,91,.3);border-radius:6px;padding:7px 10px;text-align:center;cursor:pointer;white-space:nowrap",
+      dangerStyle: "font:500 10.5px 'IBM Plex Sans';color:#c87b5e;border:1px solid rgba(200,123,94,.3);border-radius:6px;padding:7px 10px;text-align:center;cursor:pointer;white-space:nowrap",
+      pageCountLabel: `${d.pages.length} page${d.pages.length === 1 ? "" : "s"}`,
+      railToggleStyle: `display:flex;align-items:center;gap:10px;cursor:pointer;flex:none;margin:0 8px 6px;padding:${s.railOpen ? "7px 10px 9px" : "0"};height:${s.railOpen ? "auto" : "34px"};justify-content:${s.railOpen ? "flex-start" : "center"};color:rgba(231,224,210,.4);border-bottom:1px solid rgba(255,255,255,.05)`,
+      railToggleLabelStyle: s.railOpen ? "font:600 9.5px 'IBM Plex Mono';letter-spacing:.16em;white-space:nowrap" : "display:none",
+      railChevron: s.railOpen ? "›" : "‹",
+      railItems, toggleRail: this.toggleRail,
+      nibs, nibSize: curSize, onNibSize: this.onNibSize,
+      nibSizeName: curNib === "marker" ? "Weight" : "Thickness",
+      nibSizeLabel: curSize < 34 ? "fine" : curSize < 70 ? "medium" : "heavy",
+      nibSwatches: NIBS[curNib].colors.map(cc => ({ key: cc.id, name: cc.name, style: this.swatch(cc.rgb, curColor === cc.id), pick: this.setNibColor(cc.id) })),
+      helpItemStyle: `display:flex;align-items:center;gap:10px;cursor:pointer;flex:none;margin:0 8px 12px;border-top:1px solid rgba(255,255,255,.05);padding-top:10px;padding:${s.railOpen ? "8px 10px" : "0"};height:${s.railOpen ? "auto" : "34px"};justify-content:${s.railOpen ? "flex-start" : "center"};color:rgba(231,224,210,.45);border-radius:8px`,
+      helpIconStyle: `font:600 13px 'IBM Plex Mono';width:${s.railOpen ? "16px" : "34px"};text-align:center;flex:none`,
+      helpLabelStyle: s.railOpen ? "font:500 11.5px 'IBM Plex Sans';white-space:nowrap" : "display:none",
+      ...prev,
+      autoTrack: swA.track, autoKnob: swA.knob,
+      toggleAutoReturn: () => this.setDoc({ autoReturn: !d.autoReturn }),
+      toggleSound: () => this.setDoc({ sound: !d.sound }),
+      onKey: this.onKey, onFocus: this.onFocus, onBlur: this.onBlur, onAppClick: this.onAppClick, onWheel: this.onWheel,
+      onPaperDown: this.onPaperDown, onPaperMove: this.onPaperMove, onPaperUp: this.onPaperUp,
+      toggleBold: this.toggleBold, toggleUnder: this.toggleUnder, undo: this.undo, redo: this.redo,
+      openHelp: this.openHelp, openNew: this.openNew, closeOverlays: this.closeOverlays,
+      cut: this.cut, copy: this.copy, paste: this.paste, whiteoutSel: this.whiteoutSel,
+      addPage: this.addPage, duplicatePage: this.duplicatePage, ejectPage: this.ejectPage,
+      regenerate: this.regenerate, doPrint: this.doPrint, startDoc: this.startDoc,
+      pickOffice: this.draft({ machine: "office" }), pickTravel: this.draft({ machine: "travel" }),
+      pickFresh: this.draft({ condition: "fresh" }), pickAged: this.draft({ condition: "aged" }), pickUsed: this.draft({ condition: "used" }),
+      officeCardStyle: `flex:1;padding:20px;border-radius:10px;cursor:pointer;display:flex;flex-direction:column;gap:14px;background:${s.draft.machine === "office" ? "linear-gradient(#221e17,#1b1811)" : "#1a1710"};border:1px solid ${s.draft.machine === "office" ? "rgba(217,161,91,.45)" : "rgba(255,255,255,.07)"}`,
+      travelCardStyle: `flex:1;padding:20px;border-radius:10px;cursor:pointer;display:flex;flex-direction:column;gap:14px;background:${s.draft.machine === "travel" ? "linear-gradient(#221e17,#1b1811)" : "#1a1710"};border:1px solid ${s.draft.machine === "travel" ? "rgba(217,161,91,.45)" : "rgba(255,255,255,.07)"}`,
+      officeTagStyle: s.draft.machine === "office" ? "font:600 9px 'IBM Plex Mono';color:#1a1712;background:#d9a15b;border-radius:3px;padding:2px 5px" : "display:none",
+      travelTagStyle: s.draft.machine === "travel" ? "font:600 9px 'IBM Plex Mono';color:#1a1712;background:#d9a15b;border-radius:3px;padding:2px 5px" : "display:none",
+      freshChip: this.chip(s.draft.condition === "fresh"), agedChip: this.chip(s.draft.condition === "aged"), usedChip: this.chip(s.draft.condition === "used"),
+    };
+  }
+}
+</script>
+</body>
+</html>
