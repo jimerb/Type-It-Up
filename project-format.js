@@ -23,6 +23,10 @@
   }
   function clone(value) { return JSON.parse(JSON.stringify(value)); }
   function clampNumber(n, fallback) { return Number.isFinite(Number(n)) ? Number(n) : fallback; }
+  function inkProfile(value) {
+    const notch = Math.max(1, Math.min(8, Math.round(Math.max(0, Math.min(70, clampNumber(value, 10))) / 10) + 1));
+    return { value: (notch - 1) * 10, mistypeMultiplier: [0, 0.5, 1, 1, 1.1, 1.1, 1, 1.05][notch - 1] };
+  }
   function seedHash(seed) { let h = 2166136261; for (const ch of String(seed || "")) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; }
   function rnd(a, b, c) { let h = (a * 374761393 + b * 668265263 + c * 2246822519) >>> 0; h = (h ^ (h >>> 13)) * 1274126177 >>> 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967295; }
   function xml(value) { return String(value == null ? "" : value).replace(/[<>&"']/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&apos;" }[c])); }
@@ -159,25 +163,25 @@
   function strikeVisual(doc, page, strike, env) {
     if (strike.visual) return clone(strike.visual);
     const machine = (env.machines || {})[doc.machine] || { jit: 0.55, ink: 1 };
-    const wear = Math.max(0, Math.min(100, clampNumber(doc.mwear, 0))) / 100, seed = seedHash(page.seed), order = Math.floor((strike.order || 0) * 1000);
-    const jit = machine.jit * (0.3 + wear * 4), drop = rnd(strike.r, strike.c, seed + order + 29) < clampNumber(doc.ink, 20) / 420 + wear * 0.45 ? 0.36 : 1;
+    const wear = Math.max(0, Math.min(100, clampNumber(doc.mwear, 10))) / 100, seed = seedHash(page.seed), order = Math.floor((strike.order || 0) * 1000);
+    const ink = inkProfile(doc.ink), jit = machine.jit * (0.3 + wear * 4), drop = rnd(strike.r, strike.c, seed + order + 29) < (ink.value / 420 + wear * 0.45) * ink.mistypeMultiplier ? 0.36 : 1;
     const pressure = 1 - wear * 0.16 + rnd(strike.r, strike.c, seed + order + 41) * wear * 0.24;
-    const opacity = Math.max(.2, .72 + .28 * machine.ink - clampNumber(doc.ink, 20) / 100 * .28) * drop * pressure;
+    const opacity = Math.max(.2, .72 + .28 * machine.ink - ink.value / 100 * .28) * drop * pressure;
     return { dx: (rnd(strike.r, strike.c, seed + order + 7) - .5) * jit, dy: (rnd(strike.r, strike.c, seed + order + 13) - .5) * jit, dropout: drop, pressure, opacity, renderer: RENDERER_PROFILE };
   }
   function resolvedPaper(doc, page, env) {
     const size = (env.sizes || {})[doc.size] || { w: 8.5, h: 11 }, width = size.w * 72000000, height = size.h * 72000000;
-    const wear = Math.max(0, Math.min(100, clampNumber(doc.wear, 0))) / 100, machineWear = Math.max(0, Math.min(100, clampNumber(doc.mwear, 0))) / 100, seed = seedHash(page.seed);
+    const wear = Math.max(0, Math.min(100, clampNumber(doc.wear, 4))) / 100, machineWear = Math.max(0, Math.min(100, clampNumber(doc.mwear, 10))) / 100, seed = seedHash(page.seed);
     const defects = [];
     for (let i = 0, count = Math.round(wear * 72); i < count; i++) defects.push({ kind: Math.floor(rnd(i, 4, seed + 5) * 4), xMicroPt: Math.round(rnd(i, 1, seed) * width), yMicroPt: Math.round(rnd(i, 2, seed + 3) * height), size: Number((1 + rnd(i, 8, seed) * (2 + wear * 5)).toFixed(4)), strength: Number(((.45 + rnd(i, 6, seed + 7) * .8) * (.04 + wear * .2)).toFixed(6)) });
     const machineMarks = [];
     for (let i = 0, count = Math.round(machineWear * 14); i < count; i++) machineMarks.push({ xMicroPt: Math.round(rnd(i, 11, seed) * width), yMicroPt: Math.round(rnd(i, 12, seed + 3) * height), widthMicroPt: Math.round((44 + rnd(i, 13, seed) * (72 + machineWear * 170)) * 900000), angle: Number((-5 + rnd(i, 14, seed) * 10).toFixed(4)) });
-    const age = clampNumber(doc.age, 0) / 100;
-    return { renderer: RENDERER_PROFILE, seed: page.seed, source: { age: clampNumber(doc.age, 0), wear: clampNumber(doc.wear, 0), machineWear: clampNumber(doc.mwear, 0), size: doc.size }, paperColors: [[252 - age * 20, 247 - age * 27, 238 - age * 42], [248 - age * 22, 240 - age * 28, 226 - age * 44], [243 - age * 26, 233 - age * 30, 215 - age * 46]].map(c => c.map(Math.round)), noiseOpacity: Number((.035 + wear * .26).toFixed(6)), defects, machineMarks };
+    const age = clampNumber(doc.age, 50) / 100;
+    return { renderer: RENDERER_PROFILE, seed: page.seed, source: { age: clampNumber(doc.age, 50), wear: clampNumber(doc.wear, 4), machineWear: clampNumber(doc.mwear, 10), size: doc.size }, paperColors: [[252 - age * 20, 247 - age * 27, 238 - age * 42], [248 - age * 22, 240 - age * 28, 226 - age * 44], [243 - age * 26, 233 - age * 30, 215 - age * 46]].map(c => c.map(Math.round)), noiseOpacity: Number((.035 + wear * .26).toFixed(6)), defects, machineMarks };
   }
   function effectiveResolvedPaper(doc, page, env) {
     const current = page._tiuAppearance;
-    if (current && current.renderer === RENDERER_PROFILE && current.seed === page.seed && current.source && current.source.age === clampNumber(doc.age, 0) && current.source.wear === clampNumber(doc.wear, 0) && current.source.machineWear === clampNumber(doc.mwear, 0) && current.source.size === doc.size) return clone(current);
+    if (current && current.renderer === RENDERER_PROFILE && current.seed === page.seed && current.source && current.source.age === clampNumber(doc.age, 50) && current.source.wear === clampNumber(doc.wear, 4) && current.source.machineWear === clampNumber(doc.mwear, 10) && current.source.size === doc.size) return clone(current);
     return resolvedPaper(doc, page, env);
   }
   function microPointsForCell(column, machine) { return Math.round((Number(column) || 0) * 72000000 / machine.cpi); }
@@ -213,9 +217,9 @@
       type: FORMAT, schemaVersion: SCHEMA_VERSION, id: doc._tiu.projectId, title: doc.title || "Untitled document", createdAt: doc._tiu.createdAt || (doc._tiu.createdAt = now), modifiedAt: now, revision: (doc._tiu.revision = (Number(doc._tiu.revision) || 0) + 1),
       renderer: { profile: RENDERER_PROFILE, version: 1, assets: [] }, features: { required: ["classic-scene"], optional: [] }, units: "micro-point",
       defaults: {
-        machineProfileId: doc.machine, paper: { presetId: doc.size, age: clampNumber(doc.age, 6), wear: clampNumber(doc.wear, 4), resolved: { seedStrategy: "per-page", renderer: RENDERER_PROFILE } },
-        ribbon: { color: doc.inkColor || "black", condition: clampNumber(doc.ink, 20) }, machineWear: clampNumber(doc.mwear, 18), correction: { intensity: clampNumber(doc.markI, 50), showMarks: true },
-        drawing: { activeNib: doc.nib || "marker", colors: clone(doc.nibColors || {}), sizes: clone(doc.nibSizes || {}) }, carriage: { autoReturn: !!doc.autoReturn, margins: { leftMicroPt: 7200000, rightMicroPt: 7200000 }, tabStopsColumns: [] }
+        machineProfileId: doc.machine, paper: { presetId: doc.size, age: clampNumber(doc.age, 50), wear: clampNumber(doc.wear, 4), resolved: { seedStrategy: "per-page", renderer: RENDERER_PROFILE } },
+        ribbon: { color: doc.inkColor || "black", condition: clampNumber(doc.ink, 10) }, machineWear: clampNumber(doc.mwear, 10), correction: { intensity: clampNumber(doc.markI, 50), showMarks: true },
+        drawing: { activeNib: doc.nib || "pen", colors: clone(doc.nibColors || {}), sizes: clone(doc.nibSizes || {}) }, carriage: { autoReturn: !!doc.autoReturn, margins: { leftMicroPt: 7200000, rightMicroPt: 7200000 }, tabStopsColumns: [] }
       },
       machineProfiles: makeMachineProfiles(env), nextObjectSequence: next,
       pages: doc.pages.map((page, index) => {
@@ -226,7 +230,7 @@
         (page.highlights || []).forEach(o => objects.push({ id: o.id, type: "highlight", typeVersion: 1, sequence: o.order || 0, grid: { row: o.r, startColumn: o.c0, endColumn: o.c1 }, style: { color: o.color, weight: o.bold, opacity: 0.6, blend: "multiply" }, resolved: { renderer: RENDERER_PROFILE } }));
         (page.strokes || []).forEach(o => objects.push({ id: o.id, type: "freehand", typeVersion: 1, sequence: o.order || 0, nib: o.nib, color: o.color, size: o.size, points: (o.pts || []).map(p => ({ xMicroPt: Math.round(p[0] * 900000), yMicroPt: Math.round(p[1] * 900000) })), resolved: { opacity: o.nib === "pencil" ? 0.62 : 0.92, blend: "normal", renderer: RENDERER_PROFILE } }));
         (page._tiuUnknownObjects || []).forEach(o => objects.push(clone(o)));
-        return { ...clone(page._tiuUnknown || {}), id: page.id, index, format: { presetId: doc.size, widthMicroPt: Math.round(preset.w * 72000000), heightMicroPt: Math.round(preset.h * 72000000), orientation: "portrait" }, appearance: { seed: page.seed, semantic: { age: clampNumber(doc.age, 6), wear: clampNumber(doc.wear, 4) }, resolved: effectiveResolvedPaper(doc, page, env) }, objects: objects.sort((a, b) => (a.sequence || 0) - (b.sequence || 0)), extensions: clone(page.extensions || {}) };
+        return { ...clone(page._tiuUnknown || {}), id: page.id, index, format: { presetId: doc.size, widthMicroPt: Math.round(preset.w * 72000000), heightMicroPt: Math.round(preset.h * 72000000), orientation: "portrait" }, appearance: { seed: page.seed, semantic: { age: clampNumber(doc.age, 50), wear: clampNumber(doc.wear, 4) }, resolved: effectiveResolvedPaper(doc, page, env) }, objects: objects.sort((a, b) => (a.sequence || 0) - (b.sequence || 0)), extensions: clone(page.extensions || {}) };
       }),
       resume: { activePageId: (resume && resume.activePageId) || doc.pages[0].id, caret: { row: clampNumber(resume && resume.row, 6), column: clampNumber(resume && resume.column, machine.cpi), xMicroPt: microPointsForCell(clampNumber(resume && resume.column, machine.cpi), machine), yMicroPt: Math.round(clampNumber(resume && resume.row, 6) * 12000000) } }, extensions: clone(doc._tiuExtensions || {})
     };
@@ -240,7 +244,7 @@
     const size = sizes[paper.presetId] ? paper.presetId : "letter";
     const knownDocumentKeys = new Set(["type", "schemaVersion", "id", "title", "createdAt", "modifiedAt", "revision", "renderer", "features", "units", "defaults", "machineProfiles", "nextObjectSequence", "pages", "resume", "extensions"]);
     const unknownDocument = Object.fromEntries(Object.entries(doc).filter(([key]) => !knownDocumentKeys.has(key)));
-    const runtime = { title: doc.title || "Untitled document", machine: defaults.machineProfileId || "office", size, pages: [], age: clampNumber(paper.age, 6), wear: clampNumber(paper.wear, 4), ink: clampNumber(defaults.ribbon && defaults.ribbon.condition, 20), mwear: clampNumber(defaults.machineWear, 18), markI: clampNumber(correction.intensity, 50), inkColor: (defaults.ribbon && defaults.ribbon.color) || "black", hiColor: (drawing.colors && drawing.colors.marker) || "yellow", hiBold: clampNumber(drawing.sizes && drawing.sizes.marker, 50), autoReturn: !!(defaults.carriage && defaults.carriage.autoReturn), nib: drawing.activeNib || "marker", nibColors: clone(drawing.colors || { marker: "yellow", pen: "black", pencil: "graphite" }), nibSizes: clone(drawing.sizes || { marker: 50, pen: 45, pencil: 40 }), _tiu: { projectId: doc.id, createdAt: doc.createdAt, revision: doc.revision, nextObjectSequence: doc.nextObjectSequence || 1 }, _tiuExtensions: clone(doc.extensions || {}), _tiuUnknown: clone(unknownDocument) };
+    const runtime = { title: doc.title || "Untitled document", machine: defaults.machineProfileId || "office", size, pages: [], age: clampNumber(paper.age, 50), wear: clampNumber(paper.wear, 4), ink: clampNumber(defaults.ribbon && defaults.ribbon.condition, 10), mwear: clampNumber(defaults.machineWear, 10), markI: clampNumber(correction.intensity, 50), inkColor: (defaults.ribbon && defaults.ribbon.color) || "black", hiColor: (drawing.colors && drawing.colors.marker) || "yellow", hiBold: clampNumber(drawing.sizes && drawing.sizes.marker, 50), autoReturn: !!(defaults.carriage && defaults.carriage.autoReturn), nib: drawing.activeNib || "pen", nibColors: clone(drawing.colors || { marker: "yellow", pen: "black", pencil: "graphite" }), nibSizes: clone(drawing.sizes || { marker: 50, pen: 45, pencil: 40 }), _tiu: { projectId: doc.id, createdAt: doc.createdAt, revision: doc.revision, nextObjectSequence: doc.nextObjectSequence || 1 }, _tiuExtensions: clone(doc.extensions || {}), _tiuUnknown: clone(unknownDocument) };
     doc.pages.forEach(page => {
       const knownPageKeys = new Set(["id", "index", "format", "appearance", "objects", "extensions"]);
       const p = { id: page.id, seed: page.appearance && page.appearance.seed, strikes: [], whiteouts: [], highlights: [], strokes: [], extensions: clone(page.extensions || {}), _tiuAppearance: clone(page.appearance && page.appearance.resolved || null), _tiuUnknown: Object.fromEntries(Object.entries(page).filter(([key]) => !knownPageKeys.has(key))), _tiuUnknownObjects: [] };

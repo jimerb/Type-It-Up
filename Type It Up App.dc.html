@@ -189,7 +189,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 <div style="{{ rowStyle }}"><span>Paper wear</span><span style="{{ valStyle }}">{{ wear }}</span></div>
 <input type="range" min="0" max="100" value="{{ wear }}" onChange="{{ onWear }}" style="width:100%;min-width:0;accent-color:#d9a15b">
 <div style="{{ rowStyle }}"><span>Ink condition</span><span style="{{ valStyle }}">{{ inkLabel }}</span></div>
-<input type="range" min="0" max="100" step="10" value="{{ ink }}" onChange="{{ onInk }}" style="width:100%;min-width:0;accent-color:#d9a15b">
+<input type="range" min="0" max="70" step="10" value="{{ inkControl }}" onChange="{{ onInk }}" style="width:100%;min-width:0;accent-color:#d9a15b">
 <div style="{{ rowStyle }}"><span>Machine wear</span><span style="{{ valStyle }}">{{ mwear }}</span></div>
 <input type="range" min="0" max="100" value="{{ mwear }}" onChange="{{ onMwear }}" style="width:100%;min-width:0;accent-color:#d9a15b">
 <span style="{{ subheadStyle }}">RIBBON</span>
@@ -390,6 +390,11 @@ const NIBS = {
   ], min: 1, max: 3.6 },
 };
 const nibColor = (nib, id) => NIBS[nib].colors.find(c => c.id === id) || NIBS[nib].colors[0];
+const inkProfile = value => {
+  const notch = Math.max(1, Math.min(8, Math.round(Math.max(0, Math.min(70, Number(value) || 0)) / 10) + 1));
+  const levels = [0, 0.5, 1, 1, 1.1, 1.1, 1, 1.05];
+  return { notch, value: (notch - 1) * 10, label: notch === 1 ? "new" : notch === 2 ? "fresh" : notch <= 5 ? "even" : notch === 6 ? "worn" : "dry", mistypeMultiplier: levels[notch - 1] };
+};
 const DEFAULT_PREFS = { rulers: true, rail: true, drawer: false, size: "letter", sound: true };
 const loadPrefs = () => {
   try { return { ...DEFAULT_PREFS, ...(JSON.parse(localStorage.getItem(PKEY)) || {}) }; }
@@ -484,11 +489,15 @@ class Component extends DCLogic {
   normalize(doc) {
     if (!SIZES[doc.size]) doc.size = "letter";
     if (!MACHINES[doc.machine]) doc.machine = "office";
+    if (doc.age == null) doc.age = 50;
+    if (doc.wear == null) doc.wear = 4;
+    if (doc.ink == null) doc.ink = 10;
+    if (doc.mwear == null) doc.mwear = 10;
     if (doc.markI == null) doc.markI = doc.marks === false ? 0 : 50;
     if (!doc.inkColor) doc.inkColor = "black";
     if (!doc.hiColor) doc.hiColor = "yellow";
     if (doc.hiBold == null) doc.hiBold = 50;
-    if (!doc.nib) doc.nib = "marker";
+    if (!doc.nib) doc.nib = "pen";
     doc.nibColors = { marker: doc.hiColor || "yellow", pen: "black", pencil: "graphite", ...(doc.nibColors || {}) };
     doc.nibSizes = { marker: doc.hiBold == null ? 50 : doc.hiBold, pen: 45, pencil: 40, ...(doc.nibSizes || {}) };
     doc.pages.forEach(p => {
@@ -503,12 +512,12 @@ class Component extends DCLogic {
   }
 
   blankDoc(machine, size, condition) {
-    const ap = { fresh: { age: 6, wear: 4, ink: 20 }, aged: { age: 62, wear: 34, ink: 46 }, used: { age: 88, wear: 72, ink: 68 } }[condition] || { age: 6, wear: 4, ink: 20 };
+    const ap = { fresh: { age: 50, wear: 4, ink: 10 }, aged: { age: 62, wear: 34, ink: 46 }, used: { age: 88, wear: 72, ink: 68 } }[condition] || { age: 50, wear: 4, ink: 10 };
     const key = SIZES[size] ? size : "letter";
     return { machine: MACHINES[machine] ? machine : "office", size: key, pages: [newPage()],
-      age: ap.age, wear: ap.wear, ink: ap.ink, mwear: machine === "travel" ? 42 : 18,
+      age: ap.age, wear: ap.wear, ink: ap.ink, mwear: 10,
       markI: 50, inkColor: "black", hiColor: "yellow", hiBold: 50, autoReturn: false, sound: true,
-      nib: "marker", nibColors: { marker: "yellow", pen: "black", pencil: "graphite" }, nibSizes: { marker: 50, pen: 45, pencil: 40 } };
+      nib: "pen", nibColors: { marker: "yellow", pen: "black", pencil: "graphite" }, nibSizes: { marker: 50, pen: 45, pencil: 40 } };
   }
 
   // ---- metrics
@@ -1015,9 +1024,10 @@ class Component extends DCLogic {
       const strikeSeed = Math.floor((o.order || 0) * 1000);
       const resolved = o.visual || {};
       const jx = resolved.dx == null ? (rnd(o.r, o.c, seed + strikeSeed + 7) - 0.5) * jit : resolved.dx, jy = resolved.dy == null ? (rnd(o.r, o.c, seed + strikeSeed + 13) - 0.5) * jit : resolved.dy;
-      const drop = resolved.dropout == null ? (rnd(o.r, o.c, seed + strikeSeed + 29) < d.ink / 420 + machineWear * 0.45 ? 0.36 : 1) : resolved.dropout;
+      const mistypeThreshold = (inkState.value / 420 + machineWear * 0.45) * inkState.mistypeMultiplier;
+      const drop = resolved.dropout == null ? (rnd(o.r, o.c, seed + strikeSeed + 29) < mistypeThreshold ? 0.36 : 1) : resolved.dropout;
       const pressure = resolved.pressure == null ? 1 - machineWear * 0.16 + rnd(o.r, o.c, seed + strikeSeed + 41) * machineWear * 0.24 : resolved.pressure;
-      const op = resolved.opacity == null ? Math.max(0.2, inkBase - (d.ink / 100) * 0.28) * drop * pressure : resolved.opacity;
+      const op = resolved.opacity == null ? Math.max(0.2, inkBase - (inkState.value / 100) * 0.28) * drop * pressure : resolved.opacity;
       return `position:absolute;left:${o.c * cw + jx + (o.off || 0)}px;top:${o.r * lh + jy}px;width:${cw}px;height:${lh}px;line-height:${lh}px;font-family:'Courier Prime',monospace;font-size:${fs}px;color:rgba(${IC[0]},${IC[1]},${IC[2]},${op.toFixed(3)});pointer-events:none;text-align:left`;
     };
     const mk = (list, seed = pageSeed) => list.map((o, i) => ({ key: "s" + i, ch: o.ch, style: strikeStyle(o, seed) }));
@@ -1103,7 +1113,7 @@ class Component extends DCLogic {
     const bell = this.rightCol - s.c;
     const rulerW = this.pw * Z, tickPx = cw * Z, inchPx = SCALE * Z;
     const swA = this.sw(d.autoReturn), swB = this.sw(d.autoReturn), swC = this.sw(s.prefs.sound);
-    const inkLabel = d.ink < 25 ? "fresh" : d.ink < 55 ? "even" : d.ink < 80 ? "worn" : "dry";
+    const inkState = inkProfile(d.ink), inkLabel = `${inkState.notch} ${inkState.label}`;
 
     const pathOf = pts => pts.reduce((acc, p, i) => acc + (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1), "");
     const nibW = (nib, size) => { const N = NIBS[nib]; return (N.min + (N.max - N.min) * (size / 100)) * (nib === "marker" ? lh * 0.5 : 1); };
@@ -1112,7 +1122,7 @@ class Component extends DCLogic {
       return { d: pathOf(st.pts), stroke: `rgb(${C[0]},${C[1]},${C[2]})`,
         w: nibW(st.nib, st.size).toFixed(2), o: st.nib === "pencil" ? 0.62 : 0.92 };
     };
-    const curNib = d.nib || "marker", curSize = d.nibSizes[curNib], curColor = d.nibColors[curNib];
+    const curNib = d.nib || "pen", curSize = d.nibSizes[curNib], curColor = d.nibColors[curNib];
     const liveVals = s.live && s.live.length > 1 ? strokeVals({ nib: curNib, color: curColor, size: curSize, pts: s.live }) : null;
 
     const PSC = 96 / SCALE;
@@ -1149,7 +1159,7 @@ class Component extends DCLogic {
     ].map(it => {
       if (it.isSection) {
         const first = sectionIndex++ === 0;
-        return { ...it, sectionStyle: `flex:none;margin:0 8px;padding:${first ? "5px" : "14px"} 10px 5px;border-top:${first ? "0" : "1px solid rgba(255,255,255,.07)"};font:600 8.5px 'IBM Plex Mono';letter-spacing:.16em;text-transform:uppercase;color:rgba(231,224,210,.34)` };
+        return { ...it, sectionStyle: `display:${s.railOpen ? "block" : "none"};flex:none;margin:0 8px;padding:${first ? "5px" : "14px"} 10px 5px;border-top:${first ? "0" : "1px solid rgba(255,255,255,.07)"};font:600 8.5px 'IBM Plex Mono';letter-spacing:.16em;text-transform:uppercase;color:rgba(231,224,210,.34)` };
       }
       const c = it.tint, isOpen = open === it.key;
       return { ...it,
@@ -1229,7 +1239,7 @@ class Component extends DCLogic {
       boldStyle: s.bold ? "color:#d9a15b" : "color:rgba(231,224,210,.55)",
       underStyle: s.under ? "color:#d9a15b;text-decoration:underline" : "color:rgba(231,224,210,.55);text-decoration:underline",
       helpOpen: s.helpOpen, newOpen: s.newOpen,
-      age: d.age, wear: d.wear, ink: d.ink, mwear: d.mwear, inkLabel, seedLabel: `${page.seed} · locked to page`,
+      age: d.age, wear: d.wear, ink: d.ink, inkControl: inkState.value, mwear: d.mwear, inkLabel, seedLabel: `${page.seed} · locked to page`,
       onAge: this.onNum("age"), onWear: this.onNum("wear"), onInk: this.onNum("ink"), onMwear: this.onNum("mwear"),
       swTrack2: swB.track, swKnob2: swB.knob, swTrack3: swC.track, swKnob3: swC.knob,
       pTrack1: pA.track, pKnob1: pA.knob, pTrack2: pB.track, pKnob2: pB.knob, pTrack3: pC.track, pKnob3: pC.knob, pTrack4: pD.track, pKnob4: pD.knob,
