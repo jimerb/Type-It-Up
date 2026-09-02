@@ -31,6 +31,19 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
   .tiu-sheet:last-child{break-after:auto;page-break-after:auto}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 }
+[data-tiu-help-shell]{box-sizing:border-box}
+[data-tiu-help-body]{display:flex;flex:1;min-height:0;overflow:hidden}
+[data-tiu-help-nav]{box-sizing:border-box;flex:0 0 210px;min-width:0;overflow-y:auto;overflow-x:hidden}
+[data-tiu-help-content]{box-sizing:border-box;flex:1;min-width:0;min-height:0;overflow-y:auto}
+[data-tiu-help-search]:focus{outline:2px solid rgba(217,161,91,.72);outline-offset:1px}
+[data-tiu-help-nav-item]:focus-visible,[data-tiu-help-close]:focus-visible,[data-tiu-help-clear]:focus-visible{outline:2px solid #d9a15b;outline-offset:2px}
+@media (max-width:720px){
+  [data-tiu-help-backdrop]{padding:12px!important}
+  [data-tiu-help-shell]{max-height:calc(100vh - 24px)!important}
+  [data-tiu-help-body]{flex-direction:column!important}
+  [data-tiu-help-nav]{flex:0 0 auto!important;width:auto!important;max-height:168px!important;border-right:0!important;border-bottom:1px solid rgba(255,255,255,.08)!important}
+  [data-tiu-help-content]{flex:1 1 auto!important}
+}
 </style></helmet>
 
 <div id="tiu-app" tabindex="0" onKeyDown="{{ onKey }}" onFocus="{{ onFocus }}" onBlur="{{ onBlur }}" onClick="{{ onAppClick }}" style="height:100vh;display:flex;flex-direction:column;background:radial-gradient(110% 80% at 50% 100%,#1f1c16 0%,#121009 75%);outline:none;color:#e7e0d2">
@@ -226,7 +239,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 </sc-for>
 </div>
 
-<div onClick="{{ openHelp }}" title="Keys and help" style="{{ helpItemStyle }}"><span style="{{ helpIconStyle }}">?</span><span style="{{ helpLabelStyle }}">Keys and help</span></div>
+<div onClick="{{ openHelp }}" title="Help and shortcuts" aria-label="Help and shortcuts" style="{{ helpItemStyle }}"><span style="{{ helpIconStyle }}">?</span><span style="{{ helpLabelStyle }}">Help &amp; shortcuts</span></div>
 </div>
 </div>
 
@@ -241,55 +254,79 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 </div>
 </sc-if>
 
-<sc-if value="{{ helpOpen }}" hint-placeholder-val="{{ false }}">
-<div onClick="{{ closeOverlays }}" style="position:fixed;inset:0;background:rgba(12,11,8,.9);display:flex;align-items:center;justify-content:center;padding:26px;z-index:40">
-<div style="position:relative;width:496px;height:498px;background:linear-gradient(172deg,#f3ead7,#eadfc4);box-shadow:0 30px 70px rgba(0,0,0,.7)">
-<div style="position:absolute;inset:0;background-image:url(data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%3E%3Cfilter%20id%3D%27n%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.9%27%20numOctaves%3D%274%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27100%25%27%20height%3D%27100%25%27%20filter%3D%27url%28%23n%29%27%2F%3E%3C%2Fsvg%3E);opacity:.08;mix-blend-mode:multiply"></div>
-<div style="position:absolute;left:38px;top:34px;right:34px;font-family:'Courier Prime',monospace;color:#2c2620;letter-spacing:.04em">
-<div style="font-size:14px;letter-spacing:.16em;font-weight:700">KEYS AND WHAT THEY DO</div>
-<div style="font-size:11px;color:rgba(44,38,32,.6);margin-top:5px">Active only while the page has focus.</div>
-<div style="height:1px;background:rgba(44,38,32,.35);margin:14px 0 12px"></div>
-<div style="display:grid;grid-template-columns:auto 1fr;gap:9px 18px;font-size:12px;line-height:16px">
-<span style="font-weight:700">Letter</span><span>Strike, then advance one cell</span>
-<span style="font-weight:700">Space</span><span>Advance with no ink</span>
-<span style="font-weight:700">Backspace</span><span>Back one cell, nothing erased</span>
-<span style="font-weight:700">Delete</span><span>Whiteout the cell or selection</span>
-<span style="font-weight:700">Enter</span><span>Return to margin, feed a line</span>
-<span style="font-weight:700">Tab</span><span>Next tab stop</span>
-<span style="font-weight:700">Home</span><span>Left margin of this line</span>
-<span style="font-weight:700">Arrows</span><span>One cell, one line</span>
-<span style="font-weight:700">Ctrl/Cmd+B</span><span>Double-strike mode</span>
-<span style="font-weight:700">Ctrl/Cmd+U</span><span>Underscore mode</span>
-<span style="font-weight:700">Ctrl/Cmd+X C V</span><span>Cut, copy, paste strikes</span>
-<span style="font-weight:700">Ctrl/Cmd+Z</span><span>Undo · add Shift to redo</span>
-<span style="font-weight:700">Pen, pencil</span><span>Drag on the page to draw</span>
-<span style="font-weight:700">Marker</span><span>Drag across a line to stripe it</span>
-<span style="font-weight:700">Wheel</span><span>Roll the paper, one line a click</span>
+<div onClick="{{ onHelpBackdrop }}" data-tiu-help-backdrop="true" style="{{ helpOverlayStyle }}">
+<div data-tiu-help-shell="true" role="dialog" aria-modal="true" aria-labelledby="tiu-help-title" style="position:relative;width:min(100%,1040px);max-height:calc(100vh - 52px);background:radial-gradient(100% 90% at 50% 0%,#262119,#14120d);border:1px solid rgba(255,255,255,.1);border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,.72);display:flex;flex-direction:column;overflow:hidden;color:#e7e0d2">
+<div style="position:absolute;inset:0;background-image:url(data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%3E%3Cfilter%20id%3D%27n%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.9%27%20numOctaves%3D%274%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27100%25%27%20height%3D%27100%25%27%20filter%3D%27url%28%23n%29%27%2F%3E%3C%2Fsvg%3E);opacity:.08;mix-blend-mode:multiply;pointer-events:none"></div>
+<div style="display:contents">
+<div style="display:flex;align-items:flex-start;gap:18px;padding:22px 24px 16px;border-bottom:1px solid rgba(255,255,255,.08);flex:none">
+<div style="display:flex;flex-direction:column;gap:5px;min-width:0">
+<span style="font:600 9px 'IBM Plex Mono';color:rgba(217,161,91,.85);letter-spacing:.2em">TYPE IT UP</span>
+<span id="tiu-help-title" style="font:400 25px 'Courier Prime',monospace;letter-spacing:.01em">Help &amp; shortcuts</span>
+<span style="font:400 11px 'IBM Plex Sans';color:rgba(231,224,210,.55)">A practical guide to the typewriter workspace.</span>
 </div>
-<div style="height:1px;background:rgba(44,38,32,.25);margin:14px 0 10px"></div>
-<div style="font-size:11px;line-height:16px;color:rgba(44,38,32,.72)">Click outside the page and every one of these keys goes back to the browser.  Nothing is installed and nothing is held after you leave.</div>
+<button type="button" onClick="{{ closeHelp }}" data-tiu-help-close="true" aria-label="Close help" style="margin-left:auto;border:0;background:transparent;color:rgba(231,224,210,.55);font:400 25px 'IBM Plex Sans';line-height:1;cursor:pointer;padding:1px 5px" style-hover="color:#e7e0d2">×</button>
 </div>
-<div style="position:absolute;right:16px;top:12px;font-family:'Courier Prime',monospace;font-size:12px;color:rgba(44,38,32,.45)">esc</div>
+<div style="display:flex;align-items:center;gap:12px;padding:14px 24px 15px;border-bottom:1px solid rgba(255,255,255,.08);flex:none">
+<span style="font:600 9px 'IBM Plex Mono';color:rgba(231,224,210,.4);letter-spacing:.15em;white-space:nowrap">SEARCH HELP</span>
+<div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+<input data-tiu-help-search="true" type="search" value="{{ helpQuery }}" placeholder="Search topics, tools, or shortcuts" aria-label="Search help topics" autocomplete="off" onInput="{{ onHelpSearch }}" style="flex:1;min-width:0;border:1px solid rgba(255,255,255,.14);border-radius:6px;background:rgba(0,0,0,.25);color:#e7e0d2;padding:9px 11px;font:400 12px 'IBM Plex Sans';box-sizing:border-box">
+<sc-if value="{{ helpHasQuery }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ clearHelpSearch }}" data-tiu-help-clear="true" style="border:1px solid rgba(217,161,91,.35);border-radius:6px;background:transparent;color:#d9a15b;padding:8px 10px;font:500 10.5px 'IBM Plex Sans';cursor:pointer;white-space:nowrap" style-hover="background:rgba(217,161,91,.12)">Clear</button></sc-if>
 </div>
+<span style="font:400 10px 'IBM Plex Mono';color:rgba(231,224,210,.35);white-space:nowrap">{{ helpSearchStatus }}</span>
+</div>
+<div data-tiu-help-body="true">
+<nav data-tiu-help-nav="true" aria-label="Help sections" style="padding:16px 12px;background:rgba(0,0,0,.16);border-right:1px solid rgba(255,255,255,.08)">
+<div style="font:600 8.5px 'IBM Plex Mono';color:rgba(231,224,210,.32);letter-spacing:.17em;padding:0 10px 8px">SECTIONS</div>
+<sc-for list="{{ helpNav }}" as="h" hint-placeholder-count="9"><button type="button" onClick="{{ h.select }}" data-tiu-help-nav-item="true" aria-current="{{ h.current }}" style="{{ h.style }}">{{ h.label }}</button></sc-for>
+<sc-if value="{{ helpNoResults }}" hint-placeholder-val="{{ false }}"><div style="padding:14px 10px;font:400 10.5px/15px 'IBM Plex Sans';color:rgba(231,224,210,.42)">No topics match that search.</div></sc-if>
+</nav>
+<main data-tiu-help-content="true" style="padding:28px 34px 32px;background:linear-gradient(172deg,#f3ead7,#e9dfc8);color:#2c2620">
+<sc-if value="{{ helpHasContent }}" hint-placeholder-val="{{ false }}">
+<div style="max-width:720px">
+<div style="font:600 9px 'IBM Plex Mono';color:rgba(44,38,32,.52);letter-spacing:.18em;text-transform:uppercase">{{ helpContentLabel }}</div>
+<div style="font:400 27px 'Courier Prime',monospace;line-height:1.1;margin-top:7px">{{ helpContentTitle }}</div>
+<div style="font:400 13px/19px 'IBM Plex Sans';color:rgba(44,38,32,.72);margin-top:11px;max-width:680px">{{ helpContentIntro }}</div>
+<div style="height:1px;background:rgba(44,38,32,.23);margin:22px 0 19px"></div>
+<sc-for list="{{ helpGroups }}" as="g" hint-placeholder-count="4">
+<div style="font:600 9px 'IBM Plex Mono';color:rgba(44,38,32,.55);letter-spacing:.15em;text-transform:uppercase;margin:18px 0 9px">{{ g.heading }}</div>
+<sc-for list="{{ g.items }}" as="i" hint-placeholder-count="4"><div style="{{ i.style }}"><span style="font-weight:700;min-width:{{ i.labelWidth }}">{{ i.label }}</span><span>{{ i.text }}</span></div></sc-for>
+</sc-for>
 </div>
 </sc-if>
+<sc-if value="{{ helpNoResults }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:10px;max-width:480px"><div style="font:400 25px 'Courier Prime',monospace">No help topics found</div><div style="font:400 13px/19px 'IBM Plex Sans';color:rgba(44,38,32,.7)">Try a broader search such as “typing”, “paper”, “save”, or “shortcut”.</div></div></sc-if>
+</main>
+</div>
+<div style="display:flex;align-items:center;gap:12px;padding:11px 24px;border-top:1px solid rgba(255,255,255,.08);font:400 10px 'IBM Plex Mono';color:rgba(231,224,210,.38);flex:none">
+<span>Reference only · your document stays unchanged</span><span style="margin-left:auto">ESC to close</span>
+</div>
+</div>
+</div>
+</div>
+</div>
 
-<sc-if value="{{ newOpen }}" hint-placeholder-val="{{ false }}">
-<div style="position:fixed;inset:0;background:rgba(12,11,8,.88);display:flex;align-items:center;justify-content:center;z-index:50">
-<div style="width:760px;background:radial-gradient(90% 80% at 50% 0%,#231f18,#131109);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:34px 38px;display:flex;flex-direction:column;gap:24px;box-shadow:0 40px 100px rgba(0,0,0,.7)">
+<div style="{{ newOverlayStyle }}">
+<div style="width:min(760px,calc(100vw - 40px));max-height:calc(100vh - 32px);box-sizing:border-box;overflow:auto;background:radial-gradient(90% 80% at 50% 0%,#231f18,#131109);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:34px 38px;display:flex;flex-direction:column;gap:24px;box-shadow:0 40px 100px rgba(0,0,0,.7)">
 <div style="display:flex;flex-direction:column;gap:6px">
 <span style="font:600 9.5px 'IBM Plex Mono';color:rgba(217,161,91,.8);letter-spacing:.2em">TYPE IT UP</span>
 <span style="font:400 22px 'Courier Prime',monospace;letter-spacing:.01em">Choose a machine</span>
 </div>
-<div style="display:flex;gap:16px">
+<div style="display:flex;gap:16px;flex-wrap:wrap">
 <div onClick="{{ pickOffice }}" style="{{ officeCardStyle }}">
 <div style="display:flex;align-items:baseline;justify-content:space-between">
 <span style="font:600 14px 'IBM Plex Sans'">Office Standard</span>
 <span style="{{ officeTagStyle }}">SELECTED</span>
 </div>
-<div style="font-family:'Courier Prime',monospace;font-size:17px;letter-spacing:.08em;padding:12px 0;border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.07)">Handgloves 123</div>
+<div style="display:flex;gap:12px;align-items:center;min-height:124px">
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:12px">
+<div style="font-family:'Courier Prime',monospace;font-size:17px;letter-spacing:.08em;padding:11px 0;border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.07);white-space:nowrap">Handgloves 123</div>
 <div style="display:flex;flex-direction:column;gap:5px;font:400 10.5px 'IBM Plex Mono';color:rgba(231,224,210,.5)">
 <span>PICA · 10 characters per inch</span><span>Heavier, even imprint</span><span>Stable alignment</span><span>Firm key and return</span>
+</div>
+</div>
+<div style="width:43%;min-width:108px;height:122px;position:relative;display:flex;align-items:center;justify-content:center;pointer-events:none">
+<div style="position:absolute;inset:12px 0 8px;background:radial-gradient(ellipse,rgba(217,161,91,.12),transparent 70%);filter:blur(5px)"></div>
+<img src="./assets/machines/office-standard.png" alt="Office Standard typewriter" style="position:relative;width:100%;height:100%;object-fit:contain;object-position:center;opacity:.88;filter:drop-shadow(0 8px 13px rgba(0,0,0,.48)) saturate(.86)">
+</div>
 </div>
 </div>
 <div onClick="{{ pickTravel }}" style="{{ travelCardStyle }}">
@@ -297,9 +334,17 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 <span style="font:600 14px 'IBM Plex Sans'">Travel Portable</span>
 <span style="{{ travelTagStyle }}">SELECTED</span>
 </div>
-<div style="font-family:'Courier Prime',monospace;font-size:15px;letter-spacing:.03em;padding:12px 0;border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.07)"><span style="display:inline-block;transform:translateY(-.8px)">H</span>andglo<span style="display:inline-block;transform:translateY(.7px)">v</span>es <span style="opacity:.6">123</span></div>
+<div style="display:flex;gap:12px;align-items:center;min-height:124px">
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:12px">
+<div style="font-family:'Courier Prime',monospace;font-size:15px;letter-spacing:.03em;padding:11px 0;border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.07);white-space:nowrap"><span style="display:inline-block;transform:translateY(-.8px)">H</span>andglo<span style="display:inline-block;transform:translateY(.7px)">v</span>es <span style="opacity:.6">123</span></div>
 <div style="display:flex;flex-direction:column;gap:5px;font:400 10.5px 'IBM Plex Mono';color:rgba(231,224,210,.5)">
 <span>ELITE · 12 characters per inch</span><span>Lighter imprint, some dropout</span><span>Baseline drifts</span><span>Small, sharp mechanics</span>
+</div>
+</div>
+<div style="width:43%;min-width:108px;height:122px;position:relative;display:flex;align-items:center;justify-content:center;pointer-events:none">
+<div style="position:absolute;inset:12px 0 8px;background:radial-gradient(ellipse,rgba(217,161,91,.1),transparent 70%);filter:blur(5px)"></div>
+<img src="./assets/machines/travel-portable.png" alt="Travel Portable typewriter" style="position:relative;width:100%;height:100%;object-fit:contain;object-position:center;opacity:.94;filter:drop-shadow(0 8px 13px rgba(0,0,0,.38)) saturate(.9)">
+</div>
 </div>
 </div>
 </div>
@@ -326,8 +371,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 </div>
 </div>
 </div>
-</sc-if>
-
 </div>
 
 <div id="tiu-print">
@@ -360,6 +403,10 @@ const MACHINES = {
   office: { cpi: 10, name: "Office Standard", status: "OFFICE STANDARD", pitch: "PICA 10 cpi", jit: 0.55, ink: 1 },
   travel: { cpi: 12, name: "Travel Portable", status: "TRAVEL PORTABLE", pitch: "ELITE 12 cpi", jit: 1.5, ink: 0.86 },
 };
+const MACHINE_ART = {
+  office: "./assets/machines/office-standard.png",
+  travel: "./assets/machines/travel-portable.png",
+};
 const NOISE = "url(data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%3E%3Cfilter%20id%3D%27n%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.9%27%20numOctaves%3D%274%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27100%25%27%20height%3D%27100%25%27%20filter%3D%27url%28%23n%29%27%2F%3E%3C%2Fsvg%3E)";
 const KEY = "typeitup.doc.v2", PKEY = "typeitup.prefs.v1";
 const INKS = [
@@ -390,6 +437,25 @@ const NIBS = {
   ], min: 1, max: 3.6 },
 };
 const nibColor = (nib, id) => NIBS[nib].colors.find(c => c.id === id) || NIBS[nib].colors[0];
+const HELP_SECTIONS = [
+  { id: "quick-start", label: "Quick start", aliases: "begin first launch new sheet start typing", title: "Roll in a sheet and make your first strike", intro: "Type It Up is a local, tactile typewriter workspace. Start with a machine and a sheet, then click the paper before you type.", groups: [{ heading: "First launch", items: [{ label: "1", text: "Choose a machine, paper size, and paper condition in the new document sheet." }, { label: "2", text: "Choose Roll in a sheet. The paper appears beneath the fixed typing point." }, { label: "3", text: "Click anywhere on the paper. The nearest valid cell becomes the caret and typing is ready." }, { label: "4", text: "Type normally. Characters land in fixed cells instead of flowing and rewrapping like a word processor." }] }, { heading: "A useful first pass", items: [{ label: "Type", text: "Use the Type tool to place the caret, then try Space, Enter, Backspace, and the arrow keys." }, { label: "Mark", text: "Use Select for a rectangle, Draw for pen, pencil, or highlight marks, and Whiteout for corrections." }, { label: "Keep", text: "Your work autosaves in this browser. Use Save project when you want a downloadable .tiu file." }, { label: "Finish", text: "Choose Export to open the browser print flow and save a true-size PDF." }] }] },
+  { id: "overview", label: "Overview", aliases: "about features typewriter workspace what can it do", title: "A typewriter workspace with modern safety nets", intro: "The page is the interface: each character occupies a physical-looking cell, the carriage advances one column at a time, and the paper rolls behind a stationary typing point.", groups: [{ heading: "The typewriter feel", items: [{ label: "Fixed cells", text: "Text does not reflow. You can position the carriage and type at an exact row and column." }, { label: "Two machines", text: "Office Standard uses Pica spacing at 10 characters per inch; Travel Portable uses Elite spacing at 12 characters per inch." }, { label: "Material character", text: "Paper age, paper wear, ink condition, machine wear, ribbon color, jitter, and dropout shape the page." }, { label: "Stationary point", text: "The typing line stays at a fixed height while the sheet rolls behind it, like a real platen." }] }, { heading: "Modern conveniences", items: [{ label: "Edit", text: "Rectangular selection, cut, copy, paste, whiteout, undo, and redo remain available without turning the page into flowing text." }, { label: "Organize", text: "Use multiple pages, thumbnails, page duplication, and page removal." }, { label: "Preserve", text: "Documents recover locally and can be downloaded as editable .tiu projects." }, { label: "Print", text: "Export produces paper-only output at the selected Letter, Legal, or A4 size." }] }] },
+  { id: "typing", label: "Typing and carriage", aliases: "type typing carriage caret line column margin bell pica elite auto return tab", title: "Place every character deliberately", intro: "Typing is spatial: the current line and column determine where the next strike lands. The status line and ruler show where the carriage is positioned.", groups: [{ heading: "Typing controls", items: [{ label: "Type", text: "Click the page to place the caret, then enter printable characters. Each character advances one cell." }, { label: "Space", text: "Advances one cell without leaving ink." }, { label: "Backspace", text: "Moves the carriage back one cell. It does not erase the character already on the paper." }, { label: "Enter", text: "Returns to the left margin and feeds the paper by one line." }, { label: "Tab", text: "Advances to the next five-column tab stop." }, { label: "Home", text: "Moves to the left margin of the current line." }] }, { heading: "Margins and movement", items: [{ label: "Arrows", text: "Move one cell horizontally or one line vertically. Hold Shift with an arrow to extend a rectangular selection." }, { label: "Margin bell", text: "The status line warns when the right margin is near. A bell sounds as the carriage approaches the margin." }, { label: "Auto return", text: "When enabled in the Type panel, reaching the right margin returns to the left margin and feeds one line." }, { label: "Wheel", text: "Move the mouse wheel over the editor to roll the paper one line per click." }] }] },
+  { id: "editing", label: "Selecting, drawing, and correcting", aliases: "select selection rectangle cut copy paste draw pen pencil highlight marker whiteout delete correction", title: "Edit the page without losing its physical shape", intro: "Type It Up keeps editing spatial. Select a rectangle or choose a marking tool, and the marks stay attached to the page cells and scene.", groups: [{ heading: "Select and edit", items: [{ label: "Select", text: "Choose Select, then drag a rectangle over the cells you want to work with." }, { label: "Clipboard", text: "Cut, copy, and paste preserve strikes, highlights, and freehand marks. Plain text from the system clipboard can also be pasted." }, { label: "Whiteout", text: "Choose Whiteout and drag a selection, or use Delete on the current cell or selection. Adjust its intensity in the tool panel." }, { label: "Undo", text: "Undo and redo cover typing, drawing, whiteout, and page structure changes." }] }, { heading: "Draw and highlight", items: [{ label: "Pen", text: "Drag freely on the page to draw with an ink pen. Choose a color and thickness in the Draw panel." }, { label: "Pencil", text: "Drag freely to make softer graphite-like marks with its own color and thickness choices." }, { label: "Highlight", text: "Drag across a line to place a translucent highlight stripe. Choose its color and weight in the Draw panel." }] }] },
+  { id: "pages", label: "Pages and workspace", aliases: "pages thumbnails page rail add duplicate trash delete tools rulers fullscreen status", title: "Move around the document", intro: "The workspace keeps the paper central while the rails and status line provide orientation and page-level controls.", groups: [{ heading: "Pages", items: [{ label: "Thumbnails", text: "The page rail shows every page. Click a thumbnail to switch pages; hover it for a larger preview." }, { label: "Add", text: "Choose the plus tile to add a blank page with the current document settings." }, { label: "Duplicate", text: "Use the duplicate control on a thumbnail to copy that page and continue on the new copy." }, { label: "Trash", text: "Use the trash control to remove a page. The document always keeps at least one page." }] }, { heading: "Workspace controls", items: [{ label: "Tools", text: "Collapse the right tool rail to icons or expand it to see labels and the single scrollable settings panel." }, { label: "Rulers", text: "The optional ruler shows inch marks, margin stops, and the live column position." }, { label: "Fullscreen", text: "Use Full screen for browser fullscreen where available, or the in-app immersive fallback." }, { label: "Status", text: "The bottom status line shows the margin-bell state, machine pitch, line, column, mode, and page position." }] }] },
+  { id: "paper", label: "Paper, ribbon, and machine settings", aliases: "paper ribbon machine age wear ink condition color size fresh aged used preferences sound defaults", title: "Tune the machine and the sheet", intro: "Paper and ribbon controls change the visual character of the current document. Preferences control the workspace and are saved in this browser.", groups: [{ heading: "Paper and machine", items: [{ label: "Sizes", text: "Choose Letter, Legal, or A4. The selected size controls the page geometry and print size." }, { label: "Condition", text: "When creating a document, choose a fresh, aged, or well-used sheet preset." }, { label: "Paper age", text: "Changes the paper tone and aged appearance." }, { label: "Paper wear", text: "Adds seeded speckles and surface defects. Regenerate wear for a new stable page pattern." }, { label: "Ink condition", text: "Changes the ribbon's consistency from new and fresh through even, worn, and dry." }, { label: "Machine wear", text: "Changes imprint pressure, jitter, and machine marks." }] }, { heading: "Ribbon and preferences", items: [{ label: "Ribbon", text: "Choose Black record, Blue-black, Correction red, or Purple copy." }, { label: "Settings", text: "Show or hide rulers and the page rail, open tools on launch, toggle typewriter sounds, choose a default paper size, or reset preferences." }, { label: "Stable texture", text: "Wear is seeded per page, so the same sheet remains consistent until you regenerate it." }] }] },
+  { id: "files", label: "Saving, opening, and exporting", aliases: "save autosave open project tiu file pdf print exporting printing browser storage local", title: "Keep an editable copy and make a finished page", intro: "The app runs in the browser and does not upload your document. Use autosave for recovery and a .tiu project when you need a portable editable file.", groups: [{ heading: "Saving and recovery", items: [{ label: "Autosave", text: "Changes are saved locally in the current browser and recovered when you return to the app." }, { label: "Save project", text: "Downloads one versioned .tiu file containing editable pages, marks, paper settings, appearance data, and the resume position." }, { label: "Open project", text: "Choose Open and select a .tiu file to continue editing it later." }, { label: "Privacy", text: "Documents stay local to the browser unless you choose to download or share a file yourself." }] }, { heading: "Export and print", items: [{ label: "Export", text: "Choose Export, or use the browser's Ctrl/Cmd+P print command, then select Save as PDF." }, { label: "Scale", text: "Keep print scale at 100% and use the document's Letter, Legal, or A4 paper size." }, { label: "Backgrounds", text: "Turn on background graphics so paper tone, wear, and highlights are retained." }, { label: "Output", text: "The export contains paper only: no tool rail, rulers, caret, selection, or application chrome." }] }] },
+  { id: "shortcuts", label: "Keyboard shortcuts", aliases: "keys keyboard shortcut ctrl cmd shift escape arrows Ctrl/Cmd+Z Ctrl/Cmd+Shift+Z Ctrl/Cmd+Y Ctrl/Cmd+B Ctrl/Cmd+U Ctrl/Cmd+X Ctrl/Cmd+C Ctrl/Cmd+V Ctrl/Cmd+P", title: "Keyboard reference", intro: "Editor shortcuts are active only after you explicitly click the page. Controls, dialogs, and the browser keep their normal keyboard behavior.", groups: [{ heading: "Carriage and page", items: [{ label: "Printable character", text: "Strike the character and advance one cell." }, { label: "Space", text: "Advance one cell without ink." }, { label: "Backspace", text: "Move back one cell; do not erase." }, { label: "Delete", text: "Apply whiteout to the current cell or selection." }, { label: "Enter", text: "Return to the left margin and feed one line." }, { label: "Tab", text: "Advance to the next tab stop." }, { label: "Home", text: "Move to the left margin of the current line." }, { label: "Arrow keys", text: "Move one cell or line." }, { label: "Shift + arrows", text: "Extend a rectangular selection." }, { label: "Escape", text: "Clear the current selection, or close help/new-document overlays." }, { label: "Mouse wheel", text: "Roll the paper one line per click while over the editor." }] }, { heading: "Editing and modes", items: [{ label: "Ctrl/Cmd + Z", text: "Undo." }, { label: "Ctrl/Cmd + Shift + Z", text: "Redo." }, { label: "Ctrl/Cmd + Y", text: "Redo." }, { label: "Ctrl/Cmd + B", text: "Toggle automatic bold striking." }, { label: "Ctrl/Cmd + U", text: "Toggle automatic underlining." }, { label: "Ctrl/Cmd + X", text: "Cut the current selection." }, { label: "Ctrl/Cmd + C", text: "Copy the current selection." }, { label: "Ctrl/Cmd + V", text: "Paste the in-app clip or system clipboard text." }, { label: "Ctrl/Cmd + P", text: "Open the browser print flow for export." }] }] },
+  { id: "focus", label: "Focus and troubleshooting", aliases: "focus typing ready browser audio sound first key local file print not working", title: "Know when the page is listening", intro: "Type It Up deliberately limits editor shortcuts to the focused page so your browser and other applications are not affected.", groups: [{ heading: "Focus rules", items: [{ label: "Typing ready", text: "Click the paper to focus the editor. The header changes to typing ready and keystrokes go to the page." }, { label: "Leaving the page", text: "Clicking tools, settings, a dialog, another tab, or another application ends editor focus." }, { label: "After help", text: "Closing help does not silently resume typing. Click the paper again when you are ready." }, { label: "Browser keys", text: "When the editor is not focused, normal browser and operating-system shortcuts pass through unchanged." }] }, { heading: "Common surprises", items: [{ label: "No typing", text: "Click the paper once and check that the header says typing ready. Selecting a tool or page intentionally removes focus." }, { label: "First sound", text: "Browsers require user interaction before audio can start, so the first key or return sound may be silent." }, { label: "Local opening", text: "If opening the HTML file directly blocks the runtime or fonts, serve the folder over HTTP instead." }, { label: "PDF appearance", text: "Use 100% scale, the matching paper size, and background graphics in the print dialog." }] }] },
+];
+const helpSearchText = section => {
+  const bits = [section.label, section.title, section.intro, section.aliases || ""];
+  (section.groups || []).forEach(group => {
+    bits.push(group.heading);
+    (group.items || []).forEach(item => bits.push(item.label, item.text));
+  });
+  return bits.join(" ").toLowerCase();
+};
 const inkProfile = value => {
   const notch = Math.max(1, Math.min(8, Math.round(Math.max(0, Math.min(70, Number(value) || 0)) / 10) + 1));
   const levels = [0, 0.5, 1, 1, 1.1, 1.1, 1, 1.05];
@@ -414,7 +480,7 @@ class Component extends DCLogic {
     doc: null, pi: 0, r: 6, c: 10, order: 1,
     tool: "type", bold: false, under: false, focused: false,
     prefs: loadPrefs(),
-    helpOpen: false, newOpen: false, fs: false, immersive: false, vw: 0,
+    helpOpen: false, helpSection: "quick-start", helpQuery: "", newOpen: false, fs: false, immersive: false, vw: 0,
     railOpen: false, expanded: null, live: null,
     hover: null,
     sel: null, selAnchor: null, selFocus: null, drag: null, clip: null, saved: "", savedAt: null, savedKind: null,
@@ -858,7 +924,19 @@ class Component extends DCLogic {
   onWindowBlur = () => this.setState({ focused: false });
   onFocus = e => { if (e.target === e.currentTarget) this.setState({ focused: true }); };
   onBlur = e => { if (e.target === e.currentTarget) this.setState({ focused: false }); };
-  openHelp = () => this.setState({ helpOpen: true });
+  focusHelpSearch = () => requestAnimationFrame(() => {
+    const input = document.querySelector("[data-tiu-help-search]");
+    if (input) input.focus();
+  });
+  openHelp = e => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    this.setState({ helpOpen: true, helpSection: "quick-start", helpQuery: "", focused: false }, this.focusHelpSearch);
+  };
+  closeHelp = () => this.setState({ helpOpen: false, focused: false });
+  onHelpBackdrop = e => { if (e.target === e.currentTarget) this.closeHelp(); };
+  onHelpSearch = e => this.setState({ helpQuery: e.target.value });
+  clearHelpSearch = () => this.setState({ helpQuery: "" }, this.focusHelpSearch);
+  selectHelpSection = id => () => this.setState({ helpSection: id });
   savePrefs = patch => this.setState(s => {
     const prefs = { ...s.prefs, ...patch };
     try { localStorage.setItem(PKEY, JSON.stringify(prefs)); } catch (e) {}
@@ -893,8 +971,16 @@ class Component extends DCLogic {
     this.setState({ hover: { i, y: b.top + b.height / 2 } });
   };
   unhover = () => this.setState({ hover: null });
-  openNew = () => this.setState({ newOpen: true, draft: { machine: this.d.machine, size: this.d.size, condition: "fresh" } });
-  closeOverlays = () => this.setState({ helpOpen: false, newOpen: false });
+  openNew = e => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    const current = this.d || {}, fallback = this.state.draft || {};
+    this.setState({ newOpen: true, draft: {
+      machine: MACHINES[current.machine] ? current.machine : (fallback.machine || "office"),
+      size: SIZES[current.size] ? current.size : (fallback.size || "letter"),
+      condition: "fresh",
+    } }, () => this.forceUpdate());
+  };
+  closeOverlays = () => this.setState({ helpOpen: false, newOpen: false, focused: false });
   setTool = t => () => this.setState({ tool: t, sel: null, selAnchor: null, selFocus: null, focused: false }, this.remeasure);
   toggleRail = () => this.setState(s => ({ railOpen: !s.railOpen, expanded: s.railOpen ? null : s.expanded }), this.remeasure);
   openSection = (key, tool) => () => this.setState(s => ({
@@ -984,8 +1070,19 @@ class Component extends DCLogic {
   }
 
   renderVals() {
-    if (!this.d) return { chromeVisible: true, immersive: false, strikes: [], buried: [], whiteouts: [], highlights: [], thumbs: [], specks: [], previewStrikes: [], previewWhiteouts: [], previewHighlights: [], previewStrokes: [], inkStrokes: [], printPages: [], railItems: [], nibs: [], nibSwatches: [], previewStyle: "display:none", paperStyle: "position:absolute;left:50%;width:1px;height:1px" };
+    if (!this.d) return { chromeVisible: true, immersive: false, newOpen: !!this.state.newOpen, helpOverlayStyle: "display:none", newOverlayStyle: "display:none", openNew: this.openNew, officeArtSrc: MACHINE_ART.office, travelArtSrc: MACHINE_ART.travel, strikes: [], buried: [], whiteouts: [], highlights: [], thumbs: [], specks: [], previewStrikes: [], previewWhiteouts: [], previewHighlights: [], previewStrokes: [], inkStrokes: [], printPages: [], railItems: [], nibs: [], nibSwatches: [], previewStyle: "display:none", paperStyle: "position:absolute;left:50%;width:1px;height:1px" };
     const s = this.state, d = this.d, M = this.M, cw = this.cellW, lh = this.lineH;
+    const helpQuery = (s.helpQuery || "").trim().toLowerCase();
+    const helpMatches = HELP_SECTIONS.filter(section => !helpQuery || helpSearchText(section).includes(helpQuery));
+    const selectedHelp = helpMatches.find(section => section.id === s.helpSection) || helpMatches[0] || null;
+    const helpNav = helpMatches.map(section => ({
+      key: "help-nav-" + section.id,
+      label: section.label,
+      current: selectedHelp && selectedHelp.id === section.id ? "page" : "false",
+      select: this.selectHelpSection(section.id),
+      style: `display:block;width:100%;border:1px solid ${selectedHelp && selectedHelp.id === section.id ? "rgba(217,161,91,.5)" : "transparent"};border-radius:7px;background:${selectedHelp && selectedHelp.id === section.id ? "rgba(217,161,91,.14)" : "transparent"};color:${selectedHelp && selectedHelp.id === section.id ? "#d9a15b" : "rgba(231,224,210,.66)"};text-align:left;padding:9px 10px;margin:2px 0;font:500 11.5px 'IBM Plex Sans';cursor:pointer;box-sizing:border-box`,
+    }));
+    const helpGroups = selectedHelp ? selectedHelp.groups.map((group, gi) => ({ ...group, key: "help-group-" + gi, items: group.items.map((item, ii) => ({ ...item, key: "help-item-" + gi + "-" + ii, labelWidth: item.label.length > 17 ? "150px" : "118px", style: `display:grid;grid-template-columns:auto 1fr;gap:13px;padding:9px 0;border-bottom:1px solid rgba(44,38,32,.12);font:400 12px/18px 'IBM Plex Sans';color:rgba(44,38,32,.78)` })) })) : [];
     const savedDate = s.savedAt ? new Date(s.savedAt) : null;
     const hasSavedTime = savedDate && !Number.isNaN(savedDate.getTime());
     const savedTime = hasSavedTime ? savedDate.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "";
@@ -1238,7 +1335,7 @@ class Component extends DCLogic {
         : "display:flex;align-items:center;gap:6px;font:500 11px 'IBM Plex Mono';color:rgba(231,224,210,.4);border:1px solid rgba(255,255,255,.1);border-radius:5px;padding:4px 9px;white-space:nowrap",
       boldStyle: s.bold ? "color:#d9a15b" : "color:rgba(231,224,210,.55)",
       underStyle: s.under ? "color:#d9a15b;text-decoration:underline" : "color:rgba(231,224,210,.55);text-decoration:underline",
-      helpOpen: s.helpOpen, newOpen: s.newOpen,
+      helpOpen: s.helpOpen, helpOverlayStyle: s.helpOpen ? "position:fixed;inset:0;background:rgba(12,11,8,.9);display:flex;align-items:center;justify-content:center;padding:26px;z-index:40;box-sizing:border-box;overflow:auto" : "display:none", newOverlayStyle: s.newOpen ? "position:fixed;inset:0;background:rgba(12,11,8,.88);display:flex;align-items:center;justify-content:center;z-index:50" : "display:none", helpQuery: s.helpQuery || "", helpHasQuery: !!(s.helpQuery || "").trim(), helpSearchStatus: helpQuery ? `${helpMatches.length} topic${helpMatches.length === 1 ? "" : "s"} found` : `${HELP_SECTIONS.length} topics`, helpNav, helpGroups, helpHasContent: !!selectedHelp, helpNoResults: !!helpQuery && !helpMatches.length, helpContentLabel: selectedHelp ? selectedHelp.label : "", helpContentTitle: selectedHelp ? selectedHelp.title : "", helpContentIntro: selectedHelp ? selectedHelp.intro : "", newOpen: s.newOpen,
       age: d.age, wear: d.wear, ink: d.ink, inkControl: inkState.value, mwear: d.mwear, inkLabel, seedLabel: `${page.seed} · locked to page`,
       onAge: this.onNum("age"), onWear: this.onNum("wear"), onInk: this.onNum("ink"), onMwear: this.onNum("mwear"),
       swTrack2: swB.track, swKnob2: swB.knob, swTrack3: swC.track, swKnob3: swC.knob,
@@ -1293,14 +1390,15 @@ class Component extends DCLogic {
       onKey: this.onKey, onFocus: this.onFocus, onBlur: this.onBlur, onAppClick: this.onAppClick, onWheel: this.onWheel,
       onPaperDown: this.onPaperDown, onPaperMove: this.onPaperMove, onPaperUp: this.onPaperUp,
       toggleBold: this.toggleBold, toggleUnder: this.toggleUnder, undo: this.undo, redo: this.redo,
-       openHelp: this.openHelp, openNew: this.openNew, closeOverlays: this.closeOverlays, openProject: this.openProject, saveProject: this.saveProject,
+       openHelp: this.openHelp, closeHelp: this.closeHelp, onHelpBackdrop: this.onHelpBackdrop, onHelpSearch: this.onHelpSearch, clearHelpSearch: this.clearHelpSearch, openNew: this.openNew, closeOverlays: this.closeOverlays, selectHelpSection: this.selectHelpSection, openProject: this.openProject, saveProject: this.saveProject,
       cut: this.cut, copy: this.copy, paste: this.paste, whiteoutSel: this.whiteoutSel,
       addPage: this.addPage, duplicatePage: this.duplicatePage, ejectPage: this.ejectPage,
       regenerate: this.regenerate, doPrint: this.doPrint, startDoc: this.startDoc,
       pickOffice: this.draft({ machine: "office" }), pickTravel: this.draft({ machine: "travel" }),
       pickFresh: this.draft({ condition: "fresh" }), pickAged: this.draft({ condition: "aged" }), pickUsed: this.draft({ condition: "used" }),
-      officeCardStyle: `flex:1;padding:20px;border-radius:10px;cursor:pointer;display:flex;flex-direction:column;gap:14px;background:${s.draft.machine === "office" ? "linear-gradient(#221e17,#1b1811)" : "#1a1710"};border:1px solid ${s.draft.machine === "office" ? "rgba(217,161,91,.45)" : "rgba(255,255,255,.07)"}`,
-      travelCardStyle: `flex:1;padding:20px;border-radius:10px;cursor:pointer;display:flex;flex-direction:column;gap:14px;background:${s.draft.machine === "travel" ? "linear-gradient(#221e17,#1b1811)" : "#1a1710"};border:1px solid ${s.draft.machine === "travel" ? "rgba(217,161,91,.45)" : "rgba(255,255,255,.07)"}`,
+      officeArtSrc: MACHINE_ART.office, travelArtSrc: MACHINE_ART.travel,
+      officeCardStyle: `flex:1 1 300px;min-width:0;box-sizing:border-box;padding:18px;border-radius:10px;cursor:pointer;display:flex;flex-direction:column;gap:12px;background:${s.draft.machine === "office" ? "linear-gradient(#221e17,#1b1811)" : "#1a1710"};border:1px solid ${s.draft.machine === "office" ? "rgba(217,161,91,.45)" : "rgba(255,255,255,.07)"}`,
+      travelCardStyle: `flex:1 1 300px;min-width:0;box-sizing:border-box;padding:18px;border-radius:10px;cursor:pointer;display:flex;flex-direction:column;gap:12px;background:${s.draft.machine === "travel" ? "linear-gradient(#221e17,#1b1811)" : "#1a1710"};border:1px solid ${s.draft.machine === "travel" ? "rgba(217,161,91,.45)" : "rgba(255,255,255,.07)"}`,
       officeTagStyle: s.draft.machine === "office" ? "font:600 9px 'IBM Plex Mono';color:#1a1712;background:#d9a15b;border-radius:3px;padding:2px 5px" : "display:none",
       travelTagStyle: s.draft.machine === "travel" ? "font:600 9px 'IBM Plex Mono';color:#1a1712;background:#d9a15b;border-radius:3px;padding:2px 5px" : "display:none",
       freshChip: this.chip(s.draft.condition === "fresh"), agedChip: this.chip(s.draft.condition === "aged"), usedChip: this.chip(s.draft.condition === "used"),

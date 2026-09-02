@@ -84,6 +84,7 @@ Type It Up App.dc.html             Full source document and app logic
 support.js                         Browser runtime used by the app
 project-format.js                  Versioned .tiu package, import validation, and recovery autosave
 assets/fonts/                      Locally bundled Courier Prime typefaces
+assets/machines/                   Transparent chooser artwork for both machines
 type-it-up-header-transparent-cropped.png  Wordmark used by the app
 TypeItUp_setup.md                  Detailed setup and implementation notes
 Type It Up PRD.md                  Product requirements document
