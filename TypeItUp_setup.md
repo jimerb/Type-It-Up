@@ -4,7 +4,7 @@
 
 **Type It Up** is a browser-based typewriter document app. Instead of a word processor's flowing text, it simulates a real machine: characters are struck into fixed cells on a sheet of paper, the carriage advances one column at a time, a bell rings near the right margin, and the paper carries age, wear and ribbon character. The paper is the interface; the surrounding application chrome is deliberately quiet.
 
-It runs entirely client-side. There is no server, no build step, and no account. Documents autosave to the browser's local storage, and export goes through the browser's own print/Save-as-PDF pipeline.
+It runs entirely client-side. There is no server, no build step, and no account. Documents autosave to revisioned browser storage, can be downloaded as editable `.tiu` packages, and export goes through the browser's own print/Save-as-PDF pipeline.
 
 **The app must be presented in dark mode.** This is not a theme option — the whole design depends on it. The workspace is a dark, warm-neutral "quiet workshop" (near-black `#100f0c` body, `#26221b`/`#1c1913` chrome, amber accent `#d9a15b`, bone text `#e7e0d2`) so the cream paper is the single bright object on screen and reads as a lit sheet on a desk. A light-mode version flattens the paper against the background and destroys the effect. Do not add a light theme or invert the palette.
 
@@ -125,7 +125,7 @@ Useful to know if you are hosting, modifying or reviewing the app.
 
 **Print layer.** A second, hidden DOM tree (`#tiu-print`) renders every page at real paper size. On print, the interactive app (`#tiu-app`) is hidden and the print layer is shown. Each sheet is a fixed-size box with a page break after it. This is why the printout contains no rails, rulers, caret or selection — those elements exist only in the app tree.
 
-**Storage keys.** Documents are saved under `typeitup.doc.v2` and preferences under `typeitup.prefs.v1` in local storage. Clearing site data resets both. If you deploy multiple copies on the same origin they will share storage — change the keys if that matters.
+**Storage.** Active documents are stored as validated Type It Up schema revisions in IndexedDB (`typeitup.projects.v1`), retaining the latest good revision and its predecessor. Preferences remain under `typeitup.prefs.v1` in local storage. The prior `typeitup.doc.v2` value is treated as a non-destructive migration source and fallback; it is not deleted automatically. Downloaded `.tiu` projects are ZIP packages containing a manifest, canonical editable document JSON, reference page SVGs, and content-addressed typeface assets.
 
 **Audio.** Key, return and bell sounds are synthesized with the Web Audio API on demand. No audio files ship with the app. Browsers require a user interaction before audio starts, so the first keystroke may be silent.
 

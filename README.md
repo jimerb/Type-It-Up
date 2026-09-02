@@ -8,7 +8,7 @@
 
 Type It Up turns writing into a small mechanical ritual. Characters land in fixed cells on a sheet of paper, the carriage advances one column at a time, and every page carries the character of its machine, ribbon, and paper. It is deliberately closer to using a typewriter than to using a word processor.
 
-The app runs entirely in the browser. There is no account, server, database, build step, or installation process. Documents and preferences are autosaved locally in the browser, while Export uses the browser's print pipeline to produce a true-size PDF.
+The app runs entirely in the browser. There is no account, server, database, build step, or installation process. Documents and preferences are autosaved locally in the browser, and an editable project can be saved as a self-contained `.tiu` file. Export uses the browser's print pipeline to produce a true-size PDF.
 
 ## What it can do
 
@@ -20,6 +20,7 @@ The app runs entirely in the browser. There is no account, server, database, bui
 - Select, cut, copy, and paste without turning the page into flowing text.
 - Add, duplicate, and remove pages with undo and redo across document edits.
 - Keep the typing point fixed while the page rolls behind it.
+- Save and reopen editable `.tiu` projects containing the document scene, deterministic appearance data, reference previews, and the Courier Prime typeface.
 - Hear key, carriage-return, and margin-bell sounds through the Web Audio API, with a mute option.
 - Export paper-only pages through the browser's Save as PDF flow.
 
@@ -71,12 +72,18 @@ Choose **Export** or press Ctrl/Cmd + P. In the print dialog:
 
 The app uses a separate print layer, so the tool rail, caret, rulers, and selection controls do not appear in the exported document.
 
+## Saving editable projects
+
+Choose **Save project** to download a single `.tiu` file, then use **Open** to continue editing it later. The project format is versioned and integrity-checked; it retains pages, strikes, corrections, highlights, freehand marks, page geometry, paper/ribbon settings, stable imperfections, and the last active carriage location. Browser layout and temporary editing state are deliberately excluded.
+
 ## Project layout
 
 ```text
 index.html                         GitHub Pages entry point
 Type It Up App.dc.html             Full source document and app logic
 support.js                         Browser runtime used by the app
+project-format.js                  Versioned .tiu package, import validation, and recovery autosave
+assets/fonts/                      Locally bundled Courier Prime typefaces
 type-it-up-header-transparent-cropped.png  Wordmark used by the app
 TypeItUp_setup.md                  Detailed setup and implementation notes
 Type It Up PRD.md                  Product requirements document
@@ -87,7 +94,9 @@ Type It Up PRD.md                  Product requirements document
 
 ## Privacy and dependencies
 
-Your document data is stored under `localStorage` in the current browser origin. Type It Up does not upload or sync documents. The runtime loads React, React DOM, and Babel from `unpkg.com`, and the interface loads Courier Prime, IBM Plex Sans, and IBM Plex Mono from Google Fonts, so the first load needs network access to those CDNs.
+Your active document is recovered from IndexedDB in the current browser origin, with legacy local storage retained as a fallback. Type It Up does not upload or sync documents. The `.tiu` package includes its own editable content and Courier Prime typeface; the runtime still loads React, React DOM, Babel, IBM Plex Sans, and IBM Plex Mono from CDNs on first app load.
+
+Courier Prime is distributed under the SIL Open Font License 1.1; its license is included at `assets/fonts/OFL.txt`.
 
 ## Notes for contributors
 

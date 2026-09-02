@@ -4,7 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Type It Up</title>
+<link rel="icon" type="image/x-icon" href="./favicon.ico">
 <script src="./support.js"></script>
+<script src="./project-format.js"></script>
 </head>
 <body>
 <x-dc>
@@ -12,8 +14,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-html,body{margin:0;height:100%;background:#100f0c;font-family:'IBM Plex Sans',system-ui,sans-serif;overflow:hidden}
+   <style>
+   @font-face{font-family:'Courier Prime';font-style:normal;font-weight:400;src:url('./assets/fonts/CourierPrime-Regular.ttf') format('truetype');font-display:swap}
+   @font-face{font-family:'Courier Prime';font-style:normal;font-weight:700;src:url('./assets/fonts/CourierPrime-Bold.ttf') format('truetype');font-display:swap}
+   html,body{margin:0;height:100%;background:#100f0c;font-family:'IBM Plex Sans',system-ui,sans-serif;overflow:hidden}
 a{color:#d9a15b;text-decoration:none}a:hover{color:#eab876}
 input[type=range]{-webkit-appearance:none;appearance:none;height:3px;background:rgba(255,255,255,.12);border-radius:2px;outline:none}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#e7e0d2;box-shadow:0 1px 4px rgba(0,0,0,.6);cursor:pointer}
@@ -44,10 +48,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 </div>
 <div style="width:1px;height:20px;background:rgba(255,255,255,.09);flex:none"></div>
 <span style="font:500 11px 'IBM Plex Sans';color:rgba(231,224,210,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto">{{ machineLine }}</span>
-<div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex:none">
+  <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex:none">
 <span style="{{ focusBadgeStyle }}">{{ focusBadge }}</span>
-<div onClick="{{ openNew }}" style="font:500 11px 'IBM Plex Sans';color:rgba(231,224,210,.6);cursor:pointer;white-space:nowrap;flex:none" style-hover="color:#e7e0d2">New document</div>
-<div onClick="{{ toggleFullscreen }}" style="{{ fsBtnStyle }}" style-hover="color:#e7e0d2;border-color:rgba(255,255,255,.22)">{{ fsLabel }}</div>
+   <div onClick="{{ openNew }}" style="font:500 11px 'IBM Plex Sans';color:rgba(231,224,210,.6);cursor:pointer;white-space:nowrap;flex:none" style-hover="color:#e7e0d2">New document</div>
+   <div onClick="{{ openProject }}" style="font:500 11px 'IBM Plex Sans';color:rgba(231,224,210,.6);cursor:pointer;white-space:nowrap;flex:none" style-hover="color:#e7e0d2">Open</div>
+   <div onClick="{{ saveProject }}" style="font:500 11px 'IBM Plex Sans';color:#1a1712;background:#d9a15b;border-radius:5px;padding:6px 10px;cursor:pointer;flex:none;white-space:nowrap">Save project</div>
+   <div onClick="{{ toggleFullscreen }}" style="{{ fsBtnStyle }}" style-hover="color:#e7e0d2;border-color:rgba(255,255,255,.22)">{{ fsLabel }}</div>
 <div onClick="{{ doPrint }}" style="font:600 11px 'IBM Plex Sans';color:#1a1712;background:#e7e0d2;border-radius:5px;padding:6px 12px;cursor:pointer;flex:none;white-space:nowrap">Export</div>
 </div>
 </div>
@@ -387,7 +393,7 @@ const NIBS = {
   ], min: 1, max: 3.6 },
 };
 const nibColor = (nib, id) => NIBS[nib].colors.find(c => c.id === id) || NIBS[nib].colors[0];
-const DEFAULT_PREFS = { rulers: true, rail: true, drawer: false, size: "letter" };
+const DEFAULT_PREFS = { rulers: true, rail: true, drawer: false, size: "letter", sound: true };
 const loadPrefs = () => {
   try { return { ...DEFAULT_PREFS, ...(JSON.parse(localStorage.getItem(PKEY)) || {}) }; }
   catch (e) { return { ...DEFAULT_PREFS }; }
@@ -413,8 +419,8 @@ class Component extends DCLogic {
 
   componentDidMount() {
     const prefs = loadPrefs();
-    let doc = null;
-    try { const raw = localStorage.getItem(KEY); if (raw) doc = JSON.parse(raw); } catch (e) {}
+    let legacy = null;
+    try { const raw = localStorage.getItem(KEY); if (raw) legacy = JSON.parse(raw); } catch (e) {}
     const fsHandler = () => this.setState({ fs: !!document.fullscreenElement });
     document.addEventListener("fullscreenchange", fsHandler);
     this._ro = window.ResizeObserver ? new ResizeObserver(() => this.measure()) : null;
@@ -427,12 +433,25 @@ class Component extends DCLogic {
     window.addEventListener("blur", this.onWindowBlur);
     if (this.props.startInFullscreen) setTimeout(() => this.toggleFullscreen(), 60);
     this._fsHandler = fsHandler;
-    if (doc && doc.pages && doc.pages.length) {
-      this.setState({ doc: this.normalize(doc), prefs, railOpen: prefs.drawer, saved: "recovered from autosave" });
-    } else {
-      this.setState({ doc: this.blankDoc("office", prefs.size, "fresh"), prefs, railOpen: prefs.drawer, newOpen: true,
-        draft: { machine: "office", size: prefs.size, condition: "fresh" } });
-    }
+    if (legacy && legacy.pages && legacy.pages.length && legacy.sound != null) prefs.sound = !!legacy.sound;
+    const initial = legacy && legacy.pages && legacy.pages.length ? this.normalize(legacy) : this.normalize(this.blankDoc("office", prefs.size, "fresh"));
+    const initialMetrics = this.metrics(initial);
+    this.setState({ doc: initial, prefs, railOpen: prefs.drawer, pi: 0, r: 6, c: initialMetrics.leftCol,
+      order: TypeItUpProject.maxSequence(initial), newOpen: !legacy, draft: { machine: initial.machine, size: initial.size, condition: "fresh" },
+      saved: "checking autosave…" });
+    (async () => {
+      let recovered = null;
+      try { recovered = await TypeItUpProject.loadAutosave(this.projectEnv()); } catch (e) {}
+      if (!recovered) {
+        if (legacy && legacy.pages && legacy.pages.length) { try { localStorage.setItem(PKEY, JSON.stringify(prefs)); } catch (e) {} this.setState({ saved: "recovered legacy autosave" }, this.save); }
+        else this.setState({ saved: "new document" });
+        return;
+      }
+      const normalized = this.normalize(recovered.runtimeDoc), m = this.metrics(normalized);
+      this.setState({ doc: normalized, prefs, railOpen: prefs.drawer, pi: Math.max(0, Math.min(recovered.resume.pageIndex, normalized.pages.length - 1)),
+        r: Math.max(0, Math.min(m.lastRow, recovered.resume.row)), c: Math.max(m.leftCol, Math.min(m.rightCol, recovered.resume.column)),
+        order: TypeItUpProject.maxSequence(normalized), newOpen: false, saved: "recovered from autosave" });
+    })();
   }
   componentWillUnmount() {
     if (this._fsHandler) document.removeEventListener("fullscreenchange", this._fsHandler);
@@ -472,6 +491,7 @@ class Component extends DCLogic {
       if (!p.strokes) p.strokes = [];
       if (!p.seed) p.seed = seedStr();
     });
+    TypeItUpProject.ensureRuntimeIds(doc);
     return doc;
   }
 
@@ -501,12 +521,53 @@ class Component extends DCLogic {
   get rightCol() { return Math.floor((this.pw - SCALE) / this.cellW); }
   get lastRow() { return Math.floor((this.ph - SCALE) / this.lineH); }
   get page() { return this.d.pages[this.state.pi] || this.d.pages[0]; }
+  projectEnv = () => ({ sizes: SIZES, machines: MACHINES });
+  projectResume = () => ({ activePageId: this.page && this.page.id, row: this.state.r, column: this.state.c });
+  saveProject = async () => {
+    if (!this.d) return;
+    this.setState({ saved: "building project file…" });
+    try {
+      await TypeItUpProject.download(this.d, this.projectResume(), this.projectEnv());
+      this.setState({ saved: "project saved" });
+    } catch (e) {
+      console.error("Type It Up project save failed", e);
+      this.setState({ saved: `project save failed: ${e && e.message ? e.message : "unknown error"}` });
+    }
+  };
+  openProject = () => {
+    const input = document.createElement("input");
+    input.type = "file"; input.accept = ".tiu,application/vnd.typeitup.project+zip";
+    input.onchange = () => { const file = input.files && input.files[0]; if (file) this.readProject(file); };
+    input.click();
+  };
+  readProject = async file => {
+    if (!file || !this.d) return;
+    this.setState({ saved: "opening project…" });
+    try {
+      const imported = await TypeItUpProject.importPackage(file, this.projectEnv());
+      const doc = this.normalize(imported.runtimeDoc), m = this.metrics(doc);
+      const pi = Math.max(0, Math.min(imported.resume.pageIndex, doc.pages.length - 1));
+      const r = Math.max(0, Math.min(m.lastRow, imported.resume.row));
+      const c = Math.max(m.leftCol, Math.min(m.rightCol, imported.resume.column));
+      this.setState({ doc, pi, r, c, order: TypeItUpProject.maxSequence(doc), focused: false, tool: "type",
+        sel: null, selAnchor: null, selFocus: null, drag: null, live: null, clip: null, undoStack: [], redoStack: [], hover: null,
+        saved: "project opened" }, () => { this.remeasure(); this.save(); });
+    } catch (e) {
+      this.setState({ saved: `project not opened: ${e && e.message ? e.message : "invalid file"}` });
+    }
+  };
 
   save() {
     clearTimeout(this._t);
     this._t = setTimeout(() => {
-      try { localStorage.setItem(KEY, JSON.stringify(this.d)); this.setState({ saved: "autosaved just now" }); }
-      catch (e) { this.setState({ saved: "autosave unavailable" }); }
+      const snapshot = this.d;
+      try { TypeItUpProject.ensureRuntimeIds(snapshot); } catch (e) {}
+      TypeItUpProject.autosave(snapshot, this.projectResume(), this.projectEnv())
+        .then(() => this.setState({ saved: "autosaved just now" }))
+        .catch(() => {
+          try { localStorage.setItem(KEY, JSON.stringify(snapshot)); this.setState({ saved: "autosaved locally" }); }
+          catch (e) { this.setState({ saved: "autosave unavailable" }); }
+        });
     }, 400);
   }
 
@@ -533,7 +594,7 @@ class Component extends DCLogic {
 
   // ---- sound
   beep(kind) {
-    if (!this.d.sound) return;
+    if (!this.state.prefs.sound) return;
     try {
       const A = this._ac || (this._ac = new (window.AudioContext || window.webkitAudioContext)());
       const t = A.currentTime;
@@ -893,10 +954,11 @@ class Component extends DCLogic {
     const visibleHighlights = (list, whiteouts) => list.filter(h => !whiteouts.some(w => w.order > h.order && w.r === h.r && h.c1 >= w.c0 && h.c0 <= w.c1));
     const strikeStyle = (o, seed = pageSeed) => {
       const strikeSeed = Math.floor((o.order || 0) * 1000);
-      const jx = (rnd(o.r, o.c, seed + strikeSeed + 7) - 0.5) * jit, jy = (rnd(o.r, o.c, seed + strikeSeed + 13) - 0.5) * jit;
-      const drop = rnd(o.r, o.c, seed + strikeSeed + 29) < d.ink / 420 + machineWear * 0.45 ? 0.36 : 1;
-      const pressure = 1 - machineWear * 0.16 + rnd(o.r, o.c, seed + strikeSeed + 41) * machineWear * 0.24;
-      const op = Math.max(0.2, inkBase - (d.ink / 100) * 0.28) * drop * pressure;
+      const resolved = o.visual || {};
+      const jx = resolved.dx == null ? (rnd(o.r, o.c, seed + strikeSeed + 7) - 0.5) * jit : resolved.dx, jy = resolved.dy == null ? (rnd(o.r, o.c, seed + strikeSeed + 13) - 0.5) * jit : resolved.dy;
+      const drop = resolved.dropout == null ? (rnd(o.r, o.c, seed + strikeSeed + 29) < d.ink / 420 + machineWear * 0.45 ? 0.36 : 1) : resolved.dropout;
+      const pressure = resolved.pressure == null ? 1 - machineWear * 0.16 + rnd(o.r, o.c, seed + strikeSeed + 41) * machineWear * 0.24 : resolved.pressure;
+      const op = resolved.opacity == null ? Math.max(0.2, inkBase - (d.ink / 100) * 0.28) * drop * pressure : resolved.opacity;
       return `position:absolute;left:${o.c * cw + jx + (o.off || 0)}px;top:${o.r * lh + jy}px;width:${cw}px;height:${lh}px;line-height:${lh}px;font-family:'Courier Prime',monospace;font-size:${fs}px;color:rgba(${IC[0]},${IC[1]},${IC[2]},${op.toFixed(3)});pointer-events:none;text-align:left`;
     };
     const mk = (list, seed = pageSeed) => list.map((o, i) => ({ key: "s" + i, ch: o.ch, style: strikeStyle(o, seed) }));
@@ -980,7 +1042,7 @@ class Component extends DCLogic {
 
     const bell = this.rightCol - s.c;
     const rulerW = this.pw * Z, tickPx = cw * Z, inchPx = SCALE * Z;
-    const swA = this.sw(d.autoReturn), swB = this.sw(d.autoReturn), swC = this.sw(d.sound);
+    const swA = this.sw(d.autoReturn), swB = this.sw(d.autoReturn), swC = this.sw(s.prefs.sound);
     const inkLabel = d.ink < 25 ? "fresh" : d.ink < 55 ? "even" : d.ink < 80 ? "worn" : "dry";
 
     const pathOf = pts => pts.reduce((acc, p, i) => acc + (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1), "");
@@ -1019,7 +1081,7 @@ class Component extends DCLogic {
       { key: "whiteout", icon: "🧴", name: "Whiteout", tint: "#e2b06c", on: open === "whiteout", panel: true, act: this.openSection("whiteout") },
       { key: "paper", icon: "◐", name: "Paper and ribbon", tint: "#d9a15b", on: open === "paper", panel: true, act: this.openSection("paper") },
       { key: "page", icon: "▤", name: "Pages", tint: "#d9a15b", on: open === "page", panel: true, act: this.openSection("page") },
-      { key: "sound", icon: "♪", name: d.sound ? "Sound on" : "Sound off", tint: "#d9a15b", on: d.sound, act: () => this.setDoc({ sound: !d.sound }) },
+       { key: "sound", icon: "♪", name: s.prefs.sound ? "Sound on" : "Sound off", tint: "#d9a15b", on: s.prefs.sound, act: this.toggleSound },
       { key: "settings", icon: "⚙", name: "Settings", tint: "#d9a15b", on: open === "settings", panel: true, act: this.openSection("settings") },
     ].map(it => {
       const c = it.tint, isOpen = open === it.key;
@@ -1147,12 +1209,12 @@ class Component extends DCLogic {
       helpLabelStyle: s.railOpen ? "font:500 11.5px 'IBM Plex Sans';white-space:nowrap" : "display:none",
       ...prev,
       autoTrack: swA.track, autoKnob: swA.knob,
-      toggleAutoReturn: () => this.setDoc({ autoReturn: !d.autoReturn }),
-      toggleSound: () => this.setDoc({ sound: !d.sound }),
+       toggleAutoReturn: () => this.setDoc({ autoReturn: !d.autoReturn }),
+       toggleSound: () => this.savePrefs({ sound: !s.prefs.sound }),
       onKey: this.onKey, onFocus: this.onFocus, onBlur: this.onBlur, onAppClick: this.onAppClick, onWheel: this.onWheel,
       onPaperDown: this.onPaperDown, onPaperMove: this.onPaperMove, onPaperUp: this.onPaperUp,
       toggleBold: this.toggleBold, toggleUnder: this.toggleUnder, undo: this.undo, redo: this.redo,
-      openHelp: this.openHelp, openNew: this.openNew, closeOverlays: this.closeOverlays,
+       openHelp: this.openHelp, openNew: this.openNew, closeOverlays: this.closeOverlays, openProject: this.openProject, saveProject: this.saveProject,
       cut: this.cut, copy: this.copy, paste: this.paste, whiteoutSel: this.whiteoutSel,
       addPage: this.addPage, duplicatePage: this.duplicatePage, ejectPage: this.ejectPage,
       regenerate: this.regenerate, doPrint: this.doPrint, startDoc: this.startDoc,
