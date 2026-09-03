@@ -222,6 +222,8 @@ Cut is treated as a modern editing operation and removes selected objects cleanl
 
 - **Paper Age** controls the transition from clean white paper to aged, warmer paper with subtle edge discoloration.
 - **Paper Wear** controls fibers, specks, creases, stains, and edge defects.
+- **Defects** provides page-specific, softly burn-darkened edge areas, patterned folds, and no more than two controlled edge or interior tears using an independent deterministic seed.
+- Tears may visually cover content but must never remove or mutate the underlying editable objects.
 - Appearance controls must preserve legibility at their default values.
 - Each page may have a stable variation derived from the document's appearance seed.
 - Provide a **Regenerate Wear** action with undo support.
@@ -268,6 +270,7 @@ Cut is treated as a modern editing operation and removes selected objects cleanl
 - Offer screen-resolution PNG and print-quality 300 DPI PNG.
 - Print using the same rendering path as PDF wherever practical.
 - Preserve all stable imperfections exactly between the editor, export, and print output.
+- Represent missing paper in PDF and physical print output as a white vector knockout with a torn rim; do not silently omit page defects.
 - Respect the current **Show Whiteout Marks** setting.
 - Do not include editor controls, selection boxes, rulers, or the typing point in output.
 

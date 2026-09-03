@@ -5,8 +5,10 @@
   const FORMAT = "typeitup-project";
   const MIME = "application/vnd.typeitup.project+zip";
   const CONTAINER_VERSION = 1;
-  const SCHEMA_VERSION = 1;
-  const RENDERER_PROFILE = "classic-v1";
+  const SCHEMA_VERSION = 2;
+  const RENDERER_PROFILE = "classic-v2";
+  const LEGACY_RENDERER_PROFILE = "classic-v1";
+  const DEFECT_RENDERER_PROFILE = "page-defects-v1";
   const MAX_ARCHIVE_BYTES = 50 * 1024 * 1024;
   const MAX_UNPACKED_BYTES = 150 * 1024 * 1024;
   const MAX_ENTRIES = 256;
@@ -29,6 +31,135 @@
   }
   function seedHash(seed) { let h = 2166136261; for (const ch of String(seed || "")) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; }
   function rnd(a, b, c) { let h = (a * 374761393 + b * 668265263 + c * 2246822519) >>> 0; h = (h ^ (h >>> 13)) * 1274126177 >>> 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967295; }
+  const FOLD_PRESETS = new Set(["none", "half-horizontal", "half-vertical", "quarter", "letter-trifold", "pocket"]);
+  const TEAR_PRESETS = new Set(["none", "edge-one", "edge-two", "interior-one", "interior-two", "mixed"]);
+  const defectCache = new Map();
+  function boundedNumber(value, fallback, min, max) { return Math.max(min, Math.min(max, clampNumber(value, fallback))); }
+  function normalizeDefects(value, fallbackSeed) {
+    const input = value && typeof value === "object" ? value : {};
+    return {
+      seed: String(input.seed || fallbackSeed || id()).slice(0, 128),
+      wornEdges: Math.round(boundedNumber(input.wornEdges, 0, 0, 100)),
+      fold: FOLD_PRESETS.has(input.fold) ? input.fold : "none",
+      foldStrength: Math.round(boundedNumber(input.foldStrength, 35, 0, 100)),
+      tears: TEAR_PRESETS.has(input.tears) ? input.tears : "none",
+    };
+  }
+  function hasDefects(value) {
+    const d = normalizeDefects(value, "clean");
+    return d.wornEdges > 0 || d.fold !== "none" || d.tears !== "none";
+  }
+  function point(xMicroPt, yMicroPt) { return { xMicroPt: Math.round(xMicroPt), yMicroPt: Math.round(yMicroPt) }; }
+  function pathData(points, scale, close) {
+    if (!points || !points.length) return "";
+    const d = points.map((p, i) => `${i ? "L" : "M"}${(p.xMicroPt * scale).toFixed(2)} ${(p.yMicroPt * scale).toFixed(2)}`).join(" ");
+    return close ? `${d} Z` : d;
+  }
+  function resolvePageDefects(value, widthMicroPt, heightMicroPt) {
+    const defects = normalizeDefects(value, "clean"), width = Math.max(1, clampNumber(widthMicroPt, 612000000)), height = Math.max(1, clampNumber(heightMicroPt, 792000000));
+    const source = { size: `${Math.round(width)}x${Math.round(height)}`, wornEdges: defects.wornEdges, fold: defects.fold, foldStrength: defects.foldStrength, tears: defects.tears };
+    const cacheKey = `${defects.seed}|${source.size}|${source.wornEdges}|${source.fold}|${source.foldStrength}|${source.tears}`;
+    if (defectCache.has(cacheKey)) return clone(defectCache.get(cacheKey));
+    const key = seedHash(defects.seed), inch = 72000000, edgeWear = [], folds = [], tears = [];
+    const wearRatio = defects.wornEdges / 100;
+    const edgeNames = ["top", "bottom", "left", "right"];
+    const addEdgeBurn = (side, startRatio, endRatio, index, accent) => {
+      const horizontal = side < 2, axis = horizontal ? width : height, points = [];
+      const depth = inch * (accent ? .23 + wearRatio * .23 + rnd(index, 104, key) * .14 : .16 + wearRatio * .16 + rnd(index, 104, key) * .08);
+      const blur = inch * (accent ? .075 + wearRatio * .07 + rnd(index, 105, key) * .055 : .055 + wearRatio * .045 + rnd(index, 105, key) * .035);
+      for (let j = 0; j <= 6; j++) {
+        const t = j / 6, along = axis * (startRatio + (endRatio - startRatio) * t);
+        const envelope = Math.sin(Math.PI * t), uneven = inch * (.003 + rnd(index * 13 + j, 106, key) * (accent ? .022 : .012)) * envelope;
+        if (side === 0) points.push(point(along, uneven));
+        else if (side === 1) points.push(point(along, height - uneven));
+        else if (side === 2) points.push(point(uneven, along));
+        else points.push(point(width - uneven, along));
+      }
+      edgeWear.push({
+        mode: "edge-burn",
+        side: edgeNames[side],
+        points,
+        widthMicroPt: Math.round(depth * 2),
+        blurMicroPt: Math.round(blur),
+        opacity: Number((accent ? .025 + wearRatio * (.065 + rnd(index, 107, key) * .085) : .012 + wearRatio * (.025 + rnd(index, 107, key) * .035)).toFixed(4)),
+      });
+    };
+    if (wearRatio) {
+      // A faint, long pass on each edge creates a continuous burn-tool effect;
+      // seeded accent passes make only some stretches noticeably darker.
+      for (let side = 0; side < 4; side++) {
+        const start = .01 + rnd(side, 101, key) * .09, end = .9 + rnd(side, 102, key) * .09;
+        addEdgeBurn(side, start, end, side, false);
+      }
+      for (let i = 0, count = 1 + Math.round(wearRatio * 4); i < count; i++) {
+        const side = Math.floor(rnd(i, 111, key) * 4), span = .2 + rnd(i, 112, key) * (.24 + wearRatio * .2);
+        const start = .02 + rnd(i, 113, key) * Math.max(.02, .96 - span);
+        addEdgeBurn(side, start, Math.min(.98, start + span), i + 10, true);
+      }
+    }
+
+    const foldRatio = defects.foldStrength / 100;
+    const addFold = (x1, y1, x2, y2, index) => {
+      const dx = x2 - x1, dy = y2 - y1, len = Math.max(1, Math.hypot(dx, dy)), nx = -dy / len, ny = dx / len, points = [];
+      for (let i = 0; i <= 6; i++) {
+        const t = i / 6, envelope = Math.sin(Math.PI * t), wobble = (rnd(index * 17 + i, 111, key) - .5) * inch * .035 * envelope;
+        points.push(point(x1 + dx * t + nx * wobble, y1 + dy * t + ny * wobble));
+      }
+      folds.push({ points, widthMicroPt: Math.round(inch * (.018 + foldRatio * .035)), opacity: Number((.08 + foldRatio * .24).toFixed(4)) });
+    };
+    const jitter = (index, range) => (rnd(index, 112, key) - .5) * range;
+    if (defects.fold === "half-horizontal" || defects.fold === "quarter") addFold(0, height * (.5 + jitter(1, .018)), width, height * (.5 + jitter(1, .018)), 1);
+    if (defects.fold === "half-vertical" || defects.fold === "quarter") addFold(width * (.5 + jitter(2, .018)), 0, width * (.5 + jitter(2, .018)), height, 2);
+    if (defects.fold === "letter-trifold") {
+      addFold(0, height * (1 / 3 + jitter(3, .014)), width, height * (1 / 3 + jitter(3, .014)), 3);
+      addFold(0, height * (2 / 3 + jitter(4, .014)), width, height * (2 / 3 + jitter(4, .014)), 4);
+    }
+    if (defects.fold === "pocket") {
+      addFold(width * .04, height * (.7 + jitter(5, .035)), width * (.54 + jitter(6, .04)), height * (.46 + jitter(7, .04)), 5);
+      addFold(width * (.96 + jitter(8, .015)), height * (.9 + jitter(9, .03)), width * (.54 + jitter(10, .04)), height * (.46 + jitter(7, .04)), 6);
+      addFold(width * (.16 + jitter(11, .03)), height * (.98 + jitter(12, .01)), width * (.54 + jitter(10, .04)), height * (.46 + jitter(7, .04)), 7);
+    }
+
+    const tearCounts = { "edge-one": [1, 0], "edge-two": [2, 0], "interior-one": [0, 1], "interior-two": [0, 2], mixed: [1, 1] }[defects.tears] || [0, 0];
+    const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+    for (let i = 0; i < tearCounts[0]; i++) {
+      const side = Math.floor(rnd(i, 121, key) * 4), horizontal = side < 2, axis = horizontal ? width : height;
+      const span = Math.min(axis * .18, inch * (.34 + rnd(i, 122, key) * .42)), depth = inch * (.055 + rnd(i, 123, key) * .12);
+      const start = inch * .12 + rnd(i, 124, key) * Math.max(1, axis - span - inch * .24), end = start + span, inner = [];
+      for (let j = 0; j <= 6; j++) {
+        const at = start + span * (j / 6), bite = depth * (.35 + Math.sin(Math.PI * j / 6) * (.45 + rnd(i * 9 + j, 125, key) * .45));
+        if (horizontal) inner.push(point(at, side === 0 ? bite : height - bite));
+        else inner.push(point(side === 2 ? bite : width - bite, at));
+      }
+      let polygon;
+      if (side === 0) polygon = [point(start, 0), point(end, 0), ...inner.slice().reverse()];
+      else if (side === 1) polygon = [point(start, height), ...inner, point(end, height)];
+      else if (side === 2) polygon = [point(0, start), ...inner, point(0, end)];
+      else polygon = [point(width, start), point(width, end), ...inner.slice().reverse()];
+      tears.push({ kind: "edge", points: polygon, rim: inner, rimClosed: false, fibers: [], renderStyle: "natural-rim", opacity: Number((.58 + rnd(i, 126, key) * .22).toFixed(4)) });
+    }
+    for (let i = 0; i < tearCounts[1]; i++) {
+      const margin = inch * .55, cx = margin + rnd(i, 131, key) * Math.max(1, width - margin * 2), cy = margin + rnd(i, 132, key) * Math.max(1, height - margin * 2);
+      const length = inch * (.38 + rnd(i, 133, key) * .34), opening = inch * (.15 + rnd(i, 134, key) * .16), angle = -.9 + rnd(i, 135, key) * 1.8;
+      const ux = Math.cos(angle), uy = Math.sin(angle), nx = -uy, ny = ux, polygon = [];
+      for (let j = 0; j < 12; j++) {
+        const theta = Math.PI * 2 * j / 12, majorJitter = .8 + rnd(i * 17 + j, 136, key) * .34, minorJitter = .74 + rnd(i * 19 + j, 137, key) * .48;
+        const major = Math.cos(theta) * length * .5 * majorJitter, minor = Math.sin(theta) * opening * .5 * minorJitter;
+        polygon.push(point(clamp(cx + ux * major + nx * minor, inch * .08, width - inch * .08), clamp(cy + uy * major + ny * minor, inch * .08, height - inch * .08)));
+      }
+      const fibers = [];
+      for (let j = 0; j < 5; j++) {
+        const vertex = Math.floor(rnd(i * 23 + j, 139, key) * polygon.length), start = polygon[vertex];
+        const dx = start.xMicroPt - cx, dy = start.yMicroPt - cy, distance = Math.max(1, Math.hypot(dx, dy)), fiberLength = inch * (.025 + rnd(i * 29 + j, 140, key) * .045);
+        fibers.push([start, point(clamp(start.xMicroPt + dx / distance * fiberLength, inch * .06, width - inch * .06), clamp(start.yMicroPt + dy / distance * fiberLength, inch * .06, height - inch * .06))]);
+      }
+      tears.push({ kind: "interior", points: polygon, rim: polygon, rimClosed: true, fibers, renderStyle: "natural-rim", opacity: Number((.62 + rnd(i, 138, key) * .2).toFixed(4)) });
+    }
+    const resolved = { renderer: DEFECT_RENDERER_PROFILE, seed: defects.seed, source, edgeWear, folds, tears };
+    defectCache.set(cacheKey, clone(resolved));
+    if (defectCache.size > 128) defectCache.delete(defectCache.keys().next().value);
+    return clone(resolved);
+  }
   function xml(value) { return String(value == null ? "" : value).replace(/[<>&"']/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&apos;" }[c])); }
   function safeFilename(title) { return String(title || "Untitled document").replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim().slice(0, 80) || "Untitled document"; }
 
@@ -131,10 +262,12 @@
     validateJson(doc);
     if (!doc || doc.type !== FORMAT) throw new Error("This is not a Type It Up project.");
     if (doc.schemaVersion > SCHEMA_VERSION) throw new Error("This project needs a newer version of Type It Up.");
+    if (doc.schemaVersion < 1) throw new Error("This project format is too old to migrate safely.");
     if (!Array.isArray(doc.pages) || !doc.pages.length) throw new Error("Project has no pages.");
-    if (!doc.renderer || doc.renderer.profile !== RENDERER_PROFILE) throw new Error("This project uses an unsupported renderer profile.");
+    const expectedRenderer = doc.schemaVersion === 1 ? LEGACY_RENDERER_PROFILE : RENDERER_PROFILE;
+    if (!doc.renderer || doc.renderer.profile !== expectedRenderer) throw new Error("This project uses an unsupported renderer profile.");
     const requiredFeatures = (doc.features && doc.features.required) || [];
-    const supported = new Set(["classic-scene"]);
+    const supported = new Set(["classic-scene", DEFECT_RENDERER_PROFILE]);
     const unknown = requiredFeatures.find(f => !supported.has(f));
     if (unknown) throw new Error(`This project requires the unsupported feature: ${unknown}.`);
     doc.pages.forEach((p, i) => { required(p.id, `page ${i + 1} ID`); if (!Array.isArray(p.objects)) throw new Error(`Page ${i + 1} has invalid objects.`); });
@@ -184,6 +317,19 @@
     if (current && current.renderer === RENDERER_PROFILE && current.seed === page.seed && current.source && current.source.age === clampNumber(doc.age, 50) && current.source.wear === clampNumber(doc.wear, 4) && current.source.machineWear === clampNumber(doc.mwear, 10) && current.source.size === doc.size) return clone(current);
     return resolvedPaper(doc, page, env);
   }
+  function effectiveResolvedDefects(doc, page, env) {
+    const size = (env.sizes || {})[doc.size] || { w: 8.5, h: 11 }, width = size.w * 72000000, height = size.h * 72000000;
+    const defects = normalizeDefects(page.defects, `${page.seed || "page"}-defects`), current = page._tiuDefectsResolved;
+    const expected = { size: `${Math.round(width)}x${Math.round(height)}`, wornEdges: defects.wornEdges, fold: defects.fold, foldStrength: defects.foldStrength, tears: defects.tears };
+    const finite = value => Number.isFinite(Number(value)), edgeNames = new Set(["top", "bottom", "left", "right"]);
+    const validPoint = value => value && finite(value.xMicroPt) && finite(value.yMicroPt) && value.xMicroPt >= 0 && value.xMicroPt <= width && value.yMicroPt >= 0 && value.yMicroPt <= height;
+    const validResolved = current && current.renderer === DEFECT_RENDERER_PROFILE && current.seed === defects.seed && current.source && Object.keys(expected).every(key => current.source[key] === expected[key]) &&
+      Array.isArray(current.edgeWear) && current.edgeWear.length <= 12 && current.edgeWear.every(mark => mark && mark.mode === "edge-burn" && edgeNames.has(mark.side) && Array.isArray(mark.points) && mark.points.length >= 2 && mark.points.length <= 8 && mark.points.every(validPoint) && finite(mark.widthMicroPt) && mark.widthMicroPt >= 0 && mark.widthMicroPt <= 108000000 && finite(mark.blurMicroPt) && mark.blurMicroPt >= 0 && mark.blurMicroPt <= 18000000 && finite(mark.opacity) && mark.opacity >= 0 && mark.opacity <= 1) &&
+      Array.isArray(current.folds) && current.folds.length <= 3 && current.folds.every(fold => Array.isArray(fold.points) && fold.points.length <= 8 && fold.points.every(validPoint) && finite(fold.widthMicroPt) && fold.widthMicroPt >= 0 && fold.widthMicroPt <= 7200000 && finite(fold.opacity) && fold.opacity >= 0 && fold.opacity <= 1) &&
+      Array.isArray(current.tears) && current.tears.length <= 2 && current.tears.every(tear => tear && tear.renderStyle === "natural-rim" && Array.isArray(tear.points) && tear.points.length <= 20 && tear.points.every(validPoint) && Array.isArray(tear.rim) && tear.rim.length <= 20 && tear.rim.every(validPoint) && Array.isArray(tear.fibers) && tear.fibers.length <= 6 && tear.fibers.every(fiber => Array.isArray(fiber) && fiber.length === 2 && fiber.every(validPoint)) && finite(tear.opacity) && tear.opacity >= 0 && tear.opacity <= 1);
+    if (validResolved) return clone(current);
+    return resolvePageDefects(defects, width, height);
+  }
   function microPointsForCell(column, machine) { return Math.round((Number(column) || 0) * 72000000 / machine.cpi); }
   function makeMachineProfiles(env) {
     return Object.entries(env.machines || {}).map(([profileId, m]) => ({ id: profileId, version: 1, name: m.name, cpi: m.cpi, lineSpacingMicroPt: 12000000, margins: { leftMicroPt: 7200000, rightMicroPt: 7200000 }, bell: { columnsBeforeRight: 8 }, imprint: { jitter: m.jit, density: m.ink }, typeface: { family: "Courier Prime", asset: null } }));
@@ -202,12 +348,25 @@
     const size = (env.sizes || {})[runtime.size] || { w: 8.5, h: 11 }, machine = (env.machines || {})[runtime.machine] || { cpi: 10 };
     const width = Math.round(size.w * 96), height = Math.round(size.h * 96), cell = 96 / machine.cpi, line = 16, age = clampNumber(runtime.age, 0) / 100;
     const background = `rgb(${Math.round(252 - age * 20)},${Math.round(247 - age * 27)},${Math.round(238 - age * 42)})`;
-    const objs = [];
+    const objs = [], resolvedDefects = effectiveResolvedDefects(runtime, page, env), unit = 96 / 72000000;
+    const under = [];
+    (resolvedDefects.edgeWear || []).forEach(mark => {
+      const strokeWidth = Math.max(1, mark.widthMicroPt * unit), blur = Math.max(.5, mark.blurMicroPt * unit);
+      under.push(`<path d="${pathData(mark.points, unit, false)}" fill="none" stroke="#51341f" stroke-opacity="${mark.opacity}" stroke-width="${strokeWidth.toFixed(2)}" stroke-linecap="round" stroke-linejoin="round" style="filter:blur(${blur.toFixed(2)}px);mix-blend-mode:multiply"/>`);
+    });
+    (resolvedDefects.folds || []).forEach(fold => {
+      const d = pathData(fold.points, unit, false), strokeWidth = Math.max(.5, fold.widthMicroPt * unit);
+      under.push(`<path d="${d}" fill="none" stroke="#6f5335" stroke-opacity="${fold.opacity}" stroke-width="${strokeWidth.toFixed(2)}"/><path d="${d}" fill="none" stroke="#fffaf0" stroke-opacity="${(fold.opacity * .72).toFixed(4)}" stroke-width="${Math.max(.35, strokeWidth * .42).toFixed(2)}" transform="translate(0 ${(strokeWidth * .42).toFixed(2)})"/>`);
+    });
     (page.whiteouts || []).forEach(w => objs.push(`<rect x="${w.c0 * cell}" y="${w.r * line}" width="${(w.c1 - w.c0 + 1) * cell}" height="${line}" fill="#f7f1e5"/>`));
     (page.strikes || []).forEach(s => objs.push(`<text x="${s.c * cell}" y="${s.r * line + line * .78}" font-family="Courier Prime,monospace" font-size="${cell / .6}" fill="#26201a">${xml(s.ch)}</text>`));
     (page.highlights || []).forEach(h => objs.push(`<rect x="${h.c0 * cell}" y="${h.r * line + 3}" width="${(h.c1 - h.c0 + 1) * cell}" height="${line - 6}" fill="#f0d658" fill-opacity=".55"/>`));
     (page.strokes || []).forEach(st => { const points = (st.pts || []).map(p => `${p[0]},${p[1]}`).join(" "); if (points) objs.push(`<polyline points="${points}" fill="none" stroke="#2b2824" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`); });
-    return `<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="${background}"/>${objs.join("")}</svg>`;
+    const over = (resolvedDefects.tears || []).map(tear => {
+      const fiberPath = (tear.fibers || []).map(fiber => pathData(fiber, unit, false)).join(" ");
+      return `<path d="${pathData(tear.points, unit, true)}" fill="#fff" stroke="#3f2b19" stroke-opacity="${tear.opacity}" stroke-width="1.15" stroke-linejoin="round" style="filter:drop-shadow(1.2px 1.5px 1.1px rgba(42,25,12,.58))"/><path d="${pathData(tear.rim, unit, !!tear.rimClosed)}" fill="none" stroke="#a77b49" stroke-opacity=".78" stroke-width=".8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.2 1.1 .65 1.5"/><path d="${fiberPath}" fill="none" stroke="#79512e" stroke-opacity=".62" stroke-width=".45" stroke-linecap="round"/>`;
+    });
+    return `<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="${background}"/>${under.join("")}${objs.join("")}${over.join("")}</svg>`;
   }
   function toPortable(runtimeDoc, resume, env) {
     const doc = ensureRuntimeIds(runtimeDoc), sizes = env.sizes || {}, machine = (env.machines || {})[doc.machine] || { cpi: 10 };
@@ -215,7 +374,7 @@
     doc._tiu.nextObjectSequence = next;
     const portable = {
       type: FORMAT, schemaVersion: SCHEMA_VERSION, id: doc._tiu.projectId, title: doc.title || "Untitled document", createdAt: doc._tiu.createdAt || (doc._tiu.createdAt = now), modifiedAt: now, revision: (doc._tiu.revision = (Number(doc._tiu.revision) || 0) + 1),
-      renderer: { profile: RENDERER_PROFILE, version: 1, assets: [] }, features: { required: ["classic-scene"], optional: [] }, units: "micro-point",
+      renderer: { profile: RENDERER_PROFILE, version: 2, assets: [] }, features: { required: ["classic-scene", ...(doc.pages.some(page => hasDefects(page.defects)) ? [DEFECT_RENDERER_PROFILE] : [])], optional: [] }, units: "micro-point",
       defaults: {
         machineProfileId: doc.machine, paper: { presetId: doc.size, age: clampNumber(doc.age, 50), wear: clampNumber(doc.wear, 4), resolved: { seedStrategy: "per-page", renderer: RENDERER_PROFILE } },
         ribbon: { color: doc.inkColor || "black", condition: clampNumber(doc.ink, 10) }, machineWear: clampNumber(doc.mwear, 10), correction: { intensity: clampNumber(doc.markI, 50), showMarks: true },
@@ -230,7 +389,8 @@
         (page.highlights || []).forEach(o => objects.push({ id: o.id, type: "highlight", typeVersion: 1, sequence: o.order || 0, grid: { row: o.r, startColumn: o.c0, endColumn: o.c1 }, style: { color: o.color, weight: o.bold, opacity: 0.6, blend: "multiply" }, resolved: { renderer: RENDERER_PROFILE } }));
         (page.strokes || []).forEach(o => objects.push({ id: o.id, type: "freehand", typeVersion: 1, sequence: o.order || 0, nib: o.nib, color: o.color, size: o.size, points: (o.pts || []).map(p => ({ xMicroPt: Math.round(p[0] * 900000), yMicroPt: Math.round(p[1] * 900000) })), resolved: { opacity: o.nib === "pencil" ? 0.62 : 0.92, blend: "normal", renderer: RENDERER_PROFILE } }));
         (page._tiuUnknownObjects || []).forEach(o => objects.push(clone(o)));
-        return { ...clone(page._tiuUnknown || {}), id: page.id, index, format: { presetId: doc.size, widthMicroPt: Math.round(preset.w * 72000000), heightMicroPt: Math.round(preset.h * 72000000), orientation: "portrait" }, appearance: { seed: page.seed, semantic: { age: clampNumber(doc.age, 50), wear: clampNumber(doc.wear, 4) }, resolved: effectiveResolvedPaper(doc, page, env) }, objects: objects.sort((a, b) => (a.sequence || 0) - (b.sequence || 0)), extensions: clone(page.extensions || {}) };
+        const defects = normalizeDefects(page.defects, `${page.seed || page.id}-defects`);
+        return { ...clone(page._tiuUnknown || {}), id: page.id, index, format: { presetId: doc.size, widthMicroPt: Math.round(preset.w * 72000000), heightMicroPt: Math.round(preset.h * 72000000), orientation: "portrait" }, appearance: { seed: page.seed, semantic: { age: clampNumber(doc.age, 50), wear: clampNumber(doc.wear, 4) }, resolved: effectiveResolvedPaper(doc, page, env), defects: { seed: defects.seed, semantic: { wornEdges: defects.wornEdges, fold: defects.fold, foldStrength: defects.foldStrength, tears: defects.tears }, resolved: effectiveResolvedDefects(doc, page, env) } }, objects: objects.sort((a, b) => (a.sequence || 0) - (b.sequence || 0)), extensions: clone(page.extensions || {}) };
       }),
       resume: { activePageId: (resume && resume.activePageId) || doc.pages[0].id, caret: { row: clampNumber(resume && resume.row, 6), column: clampNumber(resume && resume.column, machine.cpi), xMicroPt: microPointsForCell(clampNumber(resume && resume.column, machine.cpi), machine), yMicroPt: Math.round(clampNumber(resume && resume.row, 6) * 12000000) } }, extensions: clone(doc._tiuExtensions || {})
     };
@@ -239,7 +399,6 @@
   }
   function fromPortable(input, env) {
     const doc = validatePortable(clone(input));
-    if (doc.schemaVersion < 1) throw new Error("This project format is too old to migrate safely.");
     const defaults = doc.defaults || {}, paper = defaults.paper || {}, drawing = defaults.drawing || {}, correction = defaults.correction || {}, sizes = env.sizes || {};
     const size = sizes[paper.presetId] ? paper.presetId : "letter";
     const knownDocumentKeys = new Set(["type", "schemaVersion", "id", "title", "createdAt", "modifiedAt", "revision", "renderer", "features", "units", "defaults", "machineProfiles", "nextObjectSequence", "pages", "resume", "extensions"]);
@@ -247,7 +406,8 @@
     const runtime = { title: doc.title || "Untitled document", machine: defaults.machineProfileId || "office", size, pages: [], age: clampNumber(paper.age, 50), wear: clampNumber(paper.wear, 4), ink: clampNumber(defaults.ribbon && defaults.ribbon.condition, 10), mwear: clampNumber(defaults.machineWear, 10), markI: clampNumber(correction.intensity, 50), inkColor: (defaults.ribbon && defaults.ribbon.color) || "black", hiColor: (drawing.colors && drawing.colors.marker) || "yellow", hiBold: clampNumber(drawing.sizes && drawing.sizes.marker, 50), autoReturn: !!(defaults.carriage && defaults.carriage.autoReturn), nib: drawing.activeNib || "pen", nibColors: clone(drawing.colors || { marker: "yellow", pen: "black", pencil: "graphite" }), nibSizes: clone(drawing.sizes || { marker: 50, pen: 45, pencil: 40 }), _tiu: { projectId: doc.id, createdAt: doc.createdAt, revision: doc.revision, nextObjectSequence: doc.nextObjectSequence || 1 }, _tiuExtensions: clone(doc.extensions || {}), _tiuUnknown: clone(unknownDocument) };
     doc.pages.forEach(page => {
       const knownPageKeys = new Set(["id", "index", "format", "appearance", "objects", "extensions"]);
-      const p = { id: page.id, seed: page.appearance && page.appearance.seed, strikes: [], whiteouts: [], highlights: [], strokes: [], extensions: clone(page.extensions || {}), _tiuAppearance: clone(page.appearance && page.appearance.resolved || null), _tiuUnknown: Object.fromEntries(Object.entries(page).filter(([key]) => !knownPageKeys.has(key))), _tiuUnknownObjects: [] };
+      const appearance = page.appearance || {}, portableDefects = appearance.defects || {}, semanticDefects = portableDefects.semantic || {};
+      const p = { id: page.id, seed: appearance.seed, defects: normalizeDefects({ seed: portableDefects.seed, ...semanticDefects }, `${appearance.seed || page.id}-defects`), strikes: [], whiteouts: [], highlights: [], strokes: [], extensions: clone(page.extensions || {}), _tiuAppearance: clone(appearance.resolved || null), _tiuDefectsResolved: clone(portableDefects.resolved || null), _tiuUnknown: Object.fromEntries(Object.entries(page).filter(([key]) => !knownPageKeys.has(key))), _tiuUnknownObjects: [] };
       page.objects.forEach(o => {
         if (o.type === "strike") p.strikes.push({ id: o.id, r: o.grid.row, c: o.grid.column, ch: o.character, order: o.sequence, off: o.style && o.style.offset || 0, visual: clone(o.resolved || {}) });
         else if (o.type === "correction") p.whiteouts.push({ id: o.id, r: o.grid.row, c0: o.grid.startColumn, c1: o.grid.endColumn, order: o.sequence, fresh: 0 });
@@ -271,7 +431,7 @@
     bundledAssets.forEach(asset => entries.push({ path: asset.path, data: asset.data }));
     const integrity = {};
     for (const entry of entries) integrity[entry.path] = { sha256: await sha256(entry.data), bytes: entry.data.length };
-    const manifest = { type: FORMAT, contentType: MIME, containerVersion: CONTAINER_VERSION, documentSchemaVersion: SCHEMA_VERSION, rendererProfile: RENDERER_PROFILE, minimumReader: 1, document: "document.json", entries: integrity, createdAt: new Date().toISOString() };
+    const manifest = { type: FORMAT, contentType: MIME, containerVersion: CONTAINER_VERSION, documentSchemaVersion: SCHEMA_VERSION, rendererProfile: RENDERER_PROFILE, minimumReader: 2, document: "document.json", entries: integrity, createdAt: new Date().toISOString() };
     const zip = zipStore([{ path: "mimetype", data: MIME }, { path: "manifest.json", data: JSON.stringify(manifest) }, ...entries]);
     return { blob: new Blob([zip], { type: MIME }), filename: `${safeFilename(portable.title)}.tiu`, portable, manifest };
   }
@@ -309,5 +469,5 @@
   }
   async function download(runtimeDoc, resume, env) { const result = await buildPackage(runtimeDoc, resume, env); const url = URL.createObjectURL(result.blob), a = document.createElement("a"); a.href = url; a.download = result.filename; a.style.display = "none"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 30000); return result; }
 
-  global.TypeItUpProject = { MIME, FORMAT, SCHEMA_VERSION, id, ensureRuntimeIds, maxSequence, toPortable, fromPortable, buildPackage, importPackage, download, autosave, loadAutosave };
+  global.TypeItUpProject = { MIME, FORMAT, SCHEMA_VERSION, id, ensureRuntimeIds, maxSequence, normalizeDefects, hasDefects, resolvePageDefects, effectiveResolvedDefects, toPortable, fromPortable, buildPackage, importPackage, download, autosave, loadAutosave };
 })(window);

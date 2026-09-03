@@ -24,6 +24,7 @@ It runs entirely client-side. There is no server, no build step, and no account.
 **Paper and ribbon**
 - Paper sizes: Letter, Legal, A4.
 - Paper age, paper wear, ink condition and machine wear as independent sliders; wear speckles are seeded per page, so each sheet is consistently imperfect.
+- A separate per-page **Defects** panel adds soft, burn-style darkening along varied portions of the edges, patterned half/quarter/tri-fold/pocket creases, and at most two controlled edge or interior tears. Defects use their own seed, so regenerating damage does not move type or change general paper wear.
 - Four ribbon colors: black record, blue-black, red review, purple copy.
 - Condition presets when rolling in a new sheet: fresh, aged, well used.
 
@@ -47,7 +48,7 @@ It runs entirely client-side. There is no server, no build step, and no account.
 - Autosave to local storage, with recovery on reload.
 
 **Export**
-- Export renders a print-only layer containing every page at true paper size, one sheet per printed page, with all application chrome excluded. The `@page` rule is kept in sync with the document's paper size so Cmd/Ctrl+P produces the same result as the Export button.
+- Export renders a print-only layer containing every page at true paper size, one sheet per printed page, with all application chrome excluded. The `@page` rule is kept in sync with the document's paper size so Cmd/Ctrl+P produces the same result as the Export button. Defects share the editor's resolved geometry; missing paper is represented by a white vector knockout and torn-fiber rim because PDF and physical printer pages remain rectangular.
 
 ---
 
@@ -125,7 +126,9 @@ Useful to know if you are hosting, modifying or reviewing the app.
 
 **Print layer.** A second, hidden DOM tree (`#tiu-print`) renders every page at real paper size. On print, the interactive app (`#tiu-app`) is hidden and the print layer is shown. Each sheet is a fixed-size box with a page break after it. This is why the printout contains no rails, rulers, caret or selection — those elements exist only in the app tree.
 
-**Storage.** Active documents are stored as validated Type It Up schema revisions in IndexedDB (`typeitup.projects.v1`), retaining the latest good revision and its predecessor. Preferences remain under `typeitup.prefs.v1` in local storage. The prior `typeitup.doc.v2` value is treated as a non-destructive migration source and fallback; it is not deleted automatically. Downloaded `.tiu` projects are ZIP packages containing a manifest, canonical editable document JSON, reference page SVGs, and content-addressed typeface assets.
+**Storage.** Active documents are stored as validated Type It Up schema revisions in IndexedDB (`typeitup.projects.v1`), retaining the latest good revision and its predecessor. Preferences remain under `typeitup.prefs.v1` in local storage. The prior `typeitup.doc.v2` value is treated as a non-destructive migration source and fallback; it is not deleted automatically. Downloaded `.tiu` projects are ZIP packages containing a manifest, canonical editable document JSON, reference page SVGs, and content-addressed typeface assets. Schema version 2 adds page-level defect semantics, a dedicated defect seed, and resolved physical geometry; version 1 projects migrate forward with defects off.
+
+**Defect layers.** Worn-edge and fold SVG layers sit below editable content. Tear knockout and fiber layers sit above content, so a tear may hide ink without deleting the strike, correction, highlight, or freehand object underneath. Editor-only caret and selection layers remain above tears for continued editing.
 
 **Audio.** Key, return and bell sounds are synthesized with the Web Audio API on demand. No audio files ship with the app. Browsers require a user interaction before audio starts, so the first keystroke may be silent.
 

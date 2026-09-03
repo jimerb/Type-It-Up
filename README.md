@@ -15,12 +15,13 @@ The app runs entirely in the browser. There is no account, server, database, bui
 - Type on fixed cells with carriage movement, return, backspace, tab stops, bold, and underline.
 - Choose between an Office Standard machine with Pica spacing and a Travel Portable machine with Elite spacing.
 - Adjust Letter, Legal, or A4 paper; paper age and wear; ink condition; and machine wear.
+- Add page-specific soft, burn-darkened edges, patterned folds, and up to two controlled edge or interior tears without damaging editable content.
 - Use black record, blue-black, red review, or purple copy ribbon character.
 - Draw with pen, pencil, or highlight nibs, and apply physical-looking whiteout corrections.
 - Select, cut, copy, and paste without turning the page into flowing text.
 - Add, duplicate, and remove pages with undo and redo across document edits.
 - Keep the typing point fixed while the page rolls behind it.
-- Save and reopen editable `.tiu` projects containing the document scene, deterministic appearance data, reference previews, and the Courier Prime typeface.
+- Save and reopen editable `.tiu` projects containing the document scene, deterministic paper and defect appearance data, reference previews, and the Courier Prime typeface.
 - Hear key, carriage-return, and margin-bell sounds through the Web Audio API, with a mute option.
 - Export paper-only pages through the browser's Save as PDF flow.
 
@@ -68,13 +69,14 @@ Choose **Export** or press Ctrl/Cmd + P. In the print dialog:
 - Choose **Save as PDF**.
 - Keep scale at **100%**.
 - Turn on **background graphics** so the paper tone and wear are retained.
+- Page defects are included automatically; interior tears print as a white knockout with a visible torn-paper rim.
 - Use the document's selected paper size when the printer offers an override.
 
 The app uses a separate print layer, so the tool rail, caret, rulers, and selection controls do not appear in the exported document.
 
 ## Saving editable projects
 
-Choose **Save project** to download a single `.tiu` file, then use **Open** to continue editing it later. The project format is versioned and integrity-checked; it retains pages, strikes, corrections, highlights, freehand marks, page geometry, paper/ribbon settings, stable imperfections, and the last active carriage location. Browser layout and temporary editing state are deliberately excluded.
+Choose **Save project** to download a single `.tiu` file, then use **Open** to continue editing it later. The project format is versioned and integrity-checked; it retains pages, strikes, corrections, highlights, freehand marks, page geometry, paper/ribbon settings, page-specific defects and seeds, stable resolved imperfections, and the last active carriage location. Browser layout and temporary editing state are deliberately excluded. Current saves use schema version 2; version 1 projects open as clean, defect-free pages and upgrade on their next save.
 
 ## Project layout
 
