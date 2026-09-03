@@ -55,24 +55,24 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 <span title="{{ savedTitle }}" style="font:400 10.5px 'IBM Plex Mono';color:rgba(231,224,210,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">{{ savedLabel }}</span>
 </div>
 <div style="display:flex;align-items:center;gap:5px;justify-content:center;padding:0 12px">
-<div onClick="{{ toggleBold }}" title="Bold" aria-label="Toggle bold" style="font:600 10.5px 'IBM Plex Mono';border-radius:4px;padding:5px 10px;cursor:pointer;border:1px solid transparent" style-hover="border-color:rgba(255,255,255,.18)" data-on="{{ boldOn }}"><span style="{{ boldStyle }}">B</span></div>
-<div onClick="{{ toggleUnder }}" title="Underline" aria-label="Toggle underline" style="font:600 10.5px 'IBM Plex Mono';border-radius:4px;padding:5px 10px;cursor:pointer;border:1px solid transparent" style-hover="border-color:rgba(255,255,255,.18)"><span style="{{ underStyle }}">U</span></div>
-<div onClick="{{ undo }}" title="Undo" aria-label="Undo" style="font:600 12px 'IBM Plex Mono';color:rgba(231,224,210,.6);border-radius:4px;padding:4px 10px;cursor:pointer" style-hover="color:#e7e0d2">↺</div>
-<div onClick="{{ redo }}" title="Redo" aria-label="Redo" style="font:600 12px 'IBM Plex Mono';color:rgba(231,224,210,.6);border-radius:4px;padding:4px 10px;cursor:pointer" style-hover="color:#e7e0d2">↻</div>
+<div onClick="{{ toggleBold }}" title="Bold — Ctrl/Cmd+B" aria-label="Toggle bold (Ctrl/Cmd+B)" style="font:600 10.5px 'IBM Plex Mono';border-radius:4px;padding:5px 10px;cursor:pointer;border:1px solid transparent" style-hover="border-color:rgba(255,255,255,.18)" data-on="{{ boldOn }}"><span style="{{ boldStyle }}">B</span></div>
+<div onClick="{{ toggleUnder }}" title="Underline — Ctrl/Cmd+U" aria-label="Toggle underline (Ctrl/Cmd+U)" style="font:600 10.5px 'IBM Plex Mono';border-radius:4px;padding:5px 10px;cursor:pointer;border:1px solid transparent" style-hover="border-color:rgba(255,255,255,.18)"><span style="{{ underStyle }}">U</span></div>
+<div onClick="{{ undo }}" title="Undo — Ctrl/Cmd+Z" aria-label="Undo (Ctrl/Cmd+Z)" style="font:600 12px 'IBM Plex Mono';color:rgba(231,224,210,.6);border-radius:4px;padding:4px 10px;cursor:pointer" style-hover="color:#e7e0d2">↺</div>
+<div onClick="{{ redo }}" title="Redo — Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y" aria-label="Redo (Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y)" style="font:600 12px 'IBM Plex Mono';color:rgba(231,224,210,.6);border-radius:4px;padding:4px 10px;cursor:pointer" style-hover="color:#e7e0d2">↻</div>
 </div>
 <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0;overflow:hidden">
 <span title="{{ focusHelp }}" style="{{ focusBadgeStyle }}">{{ focusBadge }}</span>
 <div onClick="{{ openNew }}" title="New document" aria-label="New document" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:rgba(231,224,210,.68);background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.11);border-radius:5px;cursor:pointer;flex:none;box-sizing:border-box" style-hover="color:#e7e0d2;border-color:rgba(217,161,91,.58);background:rgba(217,161,91,.1)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 1.8h5l3 3v9.4H4z"></path><path d="M9 1.8v3h3M8 8v4M6 10h4"></path></svg></div>
 <div onClick="{{ openProject }}" title="Open project" aria-label="Open project" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:rgba(231,224,210,.68);background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.11);border-radius:5px;cursor:pointer;flex:none;box-sizing:border-box" style-hover="color:#e7e0d2;border-color:rgba(217,161,91,.58);background:rgba(217,161,91,.1)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19V6h6l2 2h10v2"></path><path d="M3 19l3-7h16l-3 7z"></path></svg></div>
 <div onClick="{{ saveProject }}" title="Save project" aria-label="Save project" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:#1a1712;background:#d9a15b;border:1px solid #d9a15b;border-radius:5px;cursor:pointer;flex:none;box-sizing:border-box" style-hover="background:#eab876;border-color:#eab876"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 1.8h9l2 2v10.4H2.5z"></path><path d="M5 1.8v4h5v-4M5 13h6V9H5z"></path></svg></div>
-   <div onClick="{{ toggleFullscreen }}" style="{{ fsBtnStyle }}" style-hover="color:#e7e0d2;border-color:rgba(255,255,255,.22)">{{ fsLabel }}</div>
-<div onClick="{{ doPrint }}" style="font:600 11px 'IBM Plex Sans';color:#1a1712;background:#e7e0d2;border-radius:5px;padding:6px 12px;cursor:pointer;flex:none;white-space:nowrap">Export</div>
+<div onClick="{{ toggleFullscreen }}" title="Full screen — expand the workspace" style="{{ fsBtnStyle }}" style-hover="color:#e7e0d2;border-color:rgba(255,255,255,.22)">{{ fsLabel }}</div>
+<div onClick="{{ doPrint }}" title="Export — Ctrl/Cmd+P" aria-label="Export (Ctrl/Cmd+P)" style="font:600 11px 'IBM Plex Sans';color:#1a1712;background:#e7e0d2;border-radius:5px;padding:6px 12px;cursor:pointer;flex:none;white-space:nowrap">Export</div>
 </div>
 </div>
 </sc-if>
 
 <sc-if value="{{ immersive }}" hint-placeholder-val="{{ false }}">
-<div onClick="{{ toggleFullscreen }}" style="position:fixed;top:14px;right:18px;z-index:35;font:500 11px 'IBM Plex Sans';color:#d9a15b;background:rgba(26,23,17,.9);border:1px solid rgba(217,161,91,.4);border-radius:6px;padding:7px 12px;cursor:pointer;white-space:nowrap;box-shadow:0 8px 22px rgba(0,0,0,.5)" style-hover="background:rgba(217,161,91,.16)">⤡ Exit full screen</div>
+<div onClick="{{ toggleFullscreen }}" title="Exit full screen — return to the normal workspace" style="position:fixed;top:14px;right:18px;z-index:35;font:500 11px 'IBM Plex Sans';color:#d9a15b;background:rgba(26,23,17,.9);border:1px solid rgba(217,161,91,.4);border-radius:6px;padding:7px 12px;cursor:pointer;white-space:nowrap;box-shadow:0 8px 22px rgba(0,0,0,.5)" style-hover="background:rgba(217,161,91,.16)">⤡ Exit full screen</div>
 </sc-if>
 
 <div style="flex:1;display:flex;min-height:0;min-width:0;overflow:hidden">
@@ -87,11 +87,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 <sc-for list="{{ t.bars }}" as="b" hint-placeholder-count="3"><div style="{{ b.style }}"></div></sc-for>
 <svg viewBox="{{ svgBox }}" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"><sc-for list="{{ t.defectTears }}" as="q" hint-placeholder-count="0"><path d="{{ q.d }}" style="{{ q.voidStyle }}"></path><path d="{{ q.rim }}" style="{{ q.rimStyle }}"></path><path d="{{ q.fibers }}" style="{{ q.fiberStyle }}"></path></sc-for></svg>
 <div style="{{ t.numStyle }}">{{ t.num }}</div>
-<div onClick="{{ t.duplicate }}" title="Duplicate this page" aria-label="Duplicate this page" style="{{ t.duplicateStyle }}">⧉</div>
-<div onClick="{{ t.trash }}" title="Throw this page away" aria-label="Throw this page away" style="{{ t.trashStyle }}">🗑</div>
+<div onClick="{{ t.duplicate }}" title="Duplicate page — make a copy" aria-label="Duplicate page" style="{{ t.duplicateStyle }}">⧉</div>
+<div onClick="{{ t.trash }}" title="Delete page — keep at least one page" aria-label="Delete page" style="{{ t.trashStyle }}">🗑</div>
 </div>
 </sc-for>
-<div onClick="{{ addPage }}" style="width:62px;height:34px;border:1px dashed rgba(231,224,210,.22);display:flex;align-items:center;justify-content:center;font:400 15px 'IBM Plex Mono';color:rgba(231,224,210,.35);cursor:pointer;flex:none" style-hover="border-color:#d9a15b;color:#d9a15b">+</div>
+<div onClick="{{ addPage }}" title="Add page — start with a blank sheet" aria-label="Add page" style="width:62px;height:34px;border:1px dashed rgba(231,224,210,.22);display:flex;align-items:center;justify-content:center;font:400 15px 'IBM Plex Mono';color:rgba(231,224,210,.35);cursor:pointer;flex:none" style-hover="border-color:#d9a15b;color:#d9a15b">+</div>
 </div>
 </sc-if>
 
@@ -145,11 +145,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 <div style="{{ marqueeStyle }}"></div>
 </div>
 <div style="{{ selBarStyle }}">
-<div onClick="{{ cut }}" style="font:500 11px 'IBM Plex Sans';color:#e7e0d2;padding:5px 10px;border-radius:5px;cursor:pointer" style-hover="background:rgba(255,255,255,.08)">Cut</div>
-<div onClick="{{ copy }}" style="font:500 11px 'IBM Plex Sans';color:#e7e0d2;padding:5px 10px;border-radius:5px;cursor:pointer" style-hover="background:rgba(255,255,255,.08)">Copy</div>
-<div onClick="{{ paste }}" style="font:500 11px 'IBM Plex Sans';color:#e7e0d2;padding:5px 10px;border-radius:5px;cursor:pointer" style-hover="background:rgba(255,255,255,.08)">Paste</div>
+<div onClick="{{ cut }}" title="Cut selection — Ctrl/Cmd+X" style="font:500 11px 'IBM Plex Sans';color:#e7e0d2;padding:5px 10px;border-radius:5px;cursor:pointer" style-hover="background:rgba(255,255,255,.08)">Cut</div>
+<div onClick="{{ copy }}" title="Copy selection — Ctrl/Cmd+C" style="font:500 11px 'IBM Plex Sans';color:#e7e0d2;padding:5px 10px;border-radius:5px;cursor:pointer" style-hover="background:rgba(255,255,255,.08)">Copy</div>
+<div onClick="{{ paste }}" title="Paste — Ctrl/Cmd+V" style="font:500 11px 'IBM Plex Sans';color:#e7e0d2;padding:5px 10px;border-radius:5px;cursor:pointer" style-hover="background:rgba(255,255,255,.08)">Paste</div>
 <div style="width:1px;height:16px;background:rgba(255,255,255,.12);margin:0 3px"></div>
-<div onClick="{{ whiteoutSel }}" style="font:500 11px 'IBM Plex Sans';color:#e2b06c;padding:5px 10px;border-radius:5px;cursor:pointer" style-hover="background:rgba(226,176,108,.12)">Whiteout</div>
+<div onClick="{{ whiteoutSel }}" title="Whiteout selection — Delete" style="font:500 11px 'IBM Plex Sans';color:#e2b06c;padding:5px 10px;border-radius:5px;cursor:pointer" style-hover="background:rgba(226,176,108,.12)">Whiteout</div>
 </div>
 </div>
 </div>
@@ -157,7 +157,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 
 
 <div style="{{ railStyle }}">
-<div onClick="{{ toggleRail }}" style="{{ railToggleStyle }}"><span style="font:600 13px 'IBM Plex Mono';width:16px;text-align:center;flex:none">{{ railChevron }}</span><span style="{{ railToggleLabelStyle }}">Tools</span></div>
+<div onClick="{{ toggleRail }}" title="{{ railToggleTitle }}" style="{{ railToggleStyle }}"><span style="font:600 13px 'IBM Plex Mono';width:16px;text-align:center;flex:none">{{ railChevron }}</span><span style="{{ railToggleLabelStyle }}">Tools</span></div>
 
 <div style="{{ railScrollStyle }}">
 <sc-for list="{{ railItems }}" as="t" hint-placeholder-count="7">
@@ -166,7 +166,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 </sc-if>
 <sc-if value="{{ t.isControl }}" hint-placeholder-val="{{ true }}">
 <div style="display:flex;flex-direction:column;flex:none">
-<div onClick="{{ t.act }}" title="{{ t.name }}" style="{{ t.style }}">
+<div onClick="{{ t.act }}" title="{{ t.tip }}" style="{{ t.style }}">
 <span style="{{ t.iconStyle }}">{{ t.icon }}</span>
 <span style="{{ t.labelStyle }}">{{ t.name }}</span>
 <span style="{{ t.caretStyle }}">{{ t.caret }}</span>
@@ -174,7 +174,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 
 <sc-if value="{{ t.openType }}" hint-placeholder-val="{{ false }}">
 <div style="{{ panelStyle }}">
-<div onClick="{{ toggleAutoReturn }}" style="{{ rowStyle }}"><span>Auto return</span><div style="{{ autoTrack }}"><div style="{{ autoKnob }}"></div></div></div>
+<div onClick="{{ toggleAutoReturn }}" title="Auto return — send the carriage back at the right margin" style="{{ rowStyle }}"><span>Auto return</span><div style="{{ autoTrack }}"><div style="{{ autoKnob }}"></div></div></div>
 <span style="{{ noteStyle }}">Return to the left margin at the bell.</span>
 </div>
 </sc-if>
@@ -196,7 +196,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 <div style="{{ panelStyle }}">
 <div style="{{ rowStyle }}"><span>Intensity</span><span style="{{ valStyle }}">{{ markLabel }}</span></div>
 <input type="range" min="0" max="100" value="{{ markI }}" onChange="{{ onMarkI }}" style="width:100%;min-width:0;accent-color:#d9a15b">
-<div onClick="{{ whiteoutSel }}" style="{{ actionStyle }}">Apply to selection</div>
+<div onClick="{{ whiteoutSel }}" title="Apply whiteout — Delete" style="{{ actionStyle }}">Apply to selection</div>
 <span style="{{ noteStyle }}">Delete key does the same thing.</span>
 </div>
 </sc-if>
@@ -220,7 +220,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 <div style="display:flex;gap:6px">
 <sc-for list="{{ sizeChips }}" as="z" hint-placeholder-count="3"><div onClick="{{ z.pick }}" style="{{ z.style }}">{{ z.name }}</div></sc-for>
 </div>
-<div onClick="{{ regenerate }}" style="{{ actionStyle }}">↻ Regenerate wear</div>
+<div onClick="{{ regenerate }}" title="Regenerate wear — create a new paper texture" style="{{ actionStyle }}">↻ Regenerate wear</div>
 <span style="{{ noteStyle }}">Seed {{ seedLabel }}</span>
 </div>
 </sc-if>
@@ -237,9 +237,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 <span style="{{ subheadStyle }}">TEARS</span>
 <div style="display:flex;gap:5px;flex-wrap:wrap"><sc-for list="{{ tearChips }}" as="t" hint-placeholder-count="6"><div role="button" tabindex="0" aria-label="{{ t.aria }}" aria-pressed="{{ t.pressed }}" onClick="{{ t.pick }}" onKeyDown="{{ t.keyPick }}" style="{{ t.style }}">{{ t.name }}</div></sc-for></div>
 <span style="{{ noteStyle }}">At most two controlled tears per page. Text remains editable beneath them.</span>
-<div onClick="{{ regenerateDefects }}" role="button" tabindex="0" onKeyDown="{{ regenerateDefectsKey }}" style="{{ actionStyle }}">↻ Regenerate defects</div>
-<div onClick="{{ clearDefects }}" role="button" tabindex="0" onKeyDown="{{ clearDefectsKey }}" style="{{ actionStyle }}">Clear defects</div>
-<div onClick="{{ applyDefectsAll }}" role="button" tabindex="0" onKeyDown="{{ applyDefectsAllKey }}" style="{{ actionStyle }}">Apply settings to all pages</div>
+<div onClick="{{ regenerateDefects }}" title="Regenerate defects — create a new pattern" role="button" tabindex="0" onKeyDown="{{ regenerateDefectsKey }}" style="{{ actionStyle }}">↻ Regenerate defects</div>
+<div onClick="{{ clearDefects }}" title="Clear defects — remove page damage" role="button" tabindex="0" onKeyDown="{{ clearDefectsKey }}" style="{{ actionStyle }}">Clear defects</div>
+<div onClick="{{ applyDefectsAll }}" title="Apply settings to all pages" role="button" tabindex="0" onKeyDown="{{ applyDefectsAllKey }}" style="{{ actionStyle }}">Apply settings to all pages</div>
 <span style="{{ noteStyle }}">{{ defectSeedLabel }}</span>
 </div>
 </sc-if>
@@ -1324,16 +1324,16 @@ class Component extends DCLogic {
     let sectionIndex = 0;
     const railItems = [
       { key: "modes", name: "Modes", isSection: true },
-      { key: "type", icon: "A", name: "Type", tint: "#d9a15b", on: s.tool === "type", panel: true, isControl: true, act: this.openSection("type", "type") },
-      { key: "select", icon: "⬚", name: "Select", tint: "#d9a15b", on: s.tool === "select", isControl: true, act: this.setTool("select") },
-      { key: "draw", icon: "✎", name: "Draw", tint: "#d9a15b", on: s.tool === "draw", panel: true, isControl: true, act: this.openSection("draw", "draw") },
+      { key: "type", icon: "A", name: "Type", tip: "Type — place the caret and enter characters", tint: "#d9a15b", on: s.tool === "type", panel: true, isControl: true, act: this.openSection("type", "type") },
+      { key: "select", icon: "⬚", name: "Select", tip: "Select — drag a rectangular area", tint: "#d9a15b", on: s.tool === "select", isControl: true, act: this.setTool("select") },
+      { key: "draw", icon: "✎", name: "Draw", tip: "Draw — make pen, pencil, or highlight marks", tint: "#d9a15b", on: s.tool === "draw", panel: true, isControl: true, act: this.openSection("draw", "draw") },
       { key: "correction", name: "Correction", isSection: true },
-      { key: "whiteout", icon: "🧴", name: "Whiteout", tint: "#d9a15b", on: open === "whiteout", panel: true, isControl: true, act: this.openSection("whiteout") },
+      { key: "whiteout", icon: "🧴", name: "Whiteout", tip: "Whiteout — erase with Delete or a selection", tint: "#d9a15b", on: open === "whiteout", panel: true, isControl: true, act: this.openSection("whiteout") },
       { key: "document", name: "Document", isSection: true },
-      { key: "paper", icon: "◐", name: "Paper and ribbon", tint: "#d9a15b", on: open === "paper", panel: true, isControl: true, act: this.openSection("paper") },
-      { key: "defects", icon: "⌁", name: "Defects", tint: "#d9a15b", on: open === "defects", panel: true, isControl: true, act: this.openSection("defects") },
+      { key: "paper", icon: "◐", name: "Paper and ribbon", tip: "Paper and ribbon — tune the sheet and ink", tint: "#d9a15b", on: open === "paper", panel: true, isControl: true, act: this.openSection("paper") },
+      { key: "defects", icon: "⌁", name: "Defects", tip: "Defects — add controlled wear, folds, and tears", tint: "#d9a15b", on: open === "defects", panel: true, isControl: true, act: this.openSection("defects") },
       { key: "preferences", name: "Preferences", isSection: true },
-      { key: "settings", icon: "⚙", name: "Settings", tint: "#d9a15b", on: open === "settings", panel: true, isControl: true, act: this.openSection("settings") },
+      { key: "settings", icon: "⚙", name: "Settings", tip: "Settings — customize the workspace", tint: "#d9a15b", on: open === "settings", panel: true, isControl: true, act: this.openSection("settings") },
     ].map(it => {
       if (it.isSection) {
         const first = sectionIndex++ === 0;
@@ -1474,6 +1474,7 @@ class Component extends DCLogic {
       dangerStyle: "font:500 10.5px 'IBM Plex Sans';color:#c87b5e;border:1px solid rgba(200,123,94,.3);border-radius:6px;padding:7px 10px;text-align:center;cursor:pointer;white-space:nowrap",
       pageCountLabel: `${d.pages.length} page${d.pages.length === 1 ? "" : "s"}`,
       railToggleStyle: `display:flex;align-items:center;gap:10px;cursor:pointer;flex:none;margin:0 8px 6px;padding:${s.railOpen ? "7px 10px 9px" : "0"};height:${s.railOpen ? "auto" : "34px"};justify-content:${s.railOpen ? "flex-start" : "center"};color:rgba(231,224,210,.4);border-bottom:1px solid rgba(255,255,255,.05)`,
+      railToggleTitle: s.railOpen ? "Collapse tools" : "Expand tools",
       railToggleLabelStyle: s.railOpen ? "font:600 9.5px 'IBM Plex Mono';letter-spacing:.16em;white-space:nowrap" : "display:none",
       railChevron: s.railOpen ? "›" : "‹",
       railItems, toggleRail: this.toggleRail,
